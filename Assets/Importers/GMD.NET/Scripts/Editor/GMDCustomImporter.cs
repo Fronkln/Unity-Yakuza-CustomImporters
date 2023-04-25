@@ -31,8 +31,6 @@ public class GMDCustomImporter : ScriptedImporter
 
     public override void OnImportAsset(AssetImportContext ctx)
     {
-        Debug.Log("Import start");
-
         byte[] fileBuffer = File.ReadAllBytes(ctx.assetPath);
 
         m_ctx = ctx;
