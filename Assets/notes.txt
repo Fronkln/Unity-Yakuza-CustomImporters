@@ -1,0 +1,1 @@
+Enabling unsafe code is required. (Project Settings > Player >  Allow 'unsafe' code)
