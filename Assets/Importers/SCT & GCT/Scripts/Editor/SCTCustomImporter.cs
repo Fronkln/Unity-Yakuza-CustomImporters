@@ -53,8 +53,34 @@ public class SCTCustomImporter : ScriptedImporter
     }
 
     //Create the stage collision object
-    public static GameObject Process(SCTHeader sctData)
+    public GameObject Process(SCTHeader sctData)
     {
-        return null;
+        GameObject stageColl = new GameObject();
+
+        //Visualize vertices (Debug)
+        GameObject debugMeshObj = new GameObject();
+        MeshFilter debugMeshFilter = debugMeshObj.AddComponent<MeshFilter>();
+        debugMeshFilter.sharedMesh = DebugCreateVerticesMesh(sctData);
+
+        VisualizeVertex visualizer = debugMeshObj.AddComponent<VisualizeVertex>();
+        visualizer.Mf = debugMeshFilter;
+        visualizer.Scale = 0.1f;
+
+        debugMeshObj.transform.parent = stageColl.transform;
+
+        m_ctx.AddObjectToAsset("debug_test_vertices_mesh", debugMeshFilter.sharedMesh);
+
+        return stageColl;
+    }
+
+    //Creates a mesh that only holds vertex information (only for debugging pruposes)
+    private static Mesh DebugCreateVerticesMesh(SCTHeader data)
+    {
+        Mesh mesh = new Mesh();
+        mesh.name = "debug_vertices_mesh";
+        mesh.vertices = data.Vertices;
+        mesh.RecalculateNormals();
+
+        return mesh;
     }
 }
