@@ -45,8 +45,11 @@ public class SCTCustomImporter : ScriptedImporter
             createdCollisionObject = Process(sctData);
         }
 
-        if(createdCollisionObject != null)
+        if (createdCollisionObject != null)
+        {
+            ctx.AddObjectToAsset(Path.GetFileNameWithoutExtension(ctx.assetPath), createdCollisionObject);
             ctx.SetMainObject(createdCollisionObject);
+        }
     }
 
     //Create the stage collision object

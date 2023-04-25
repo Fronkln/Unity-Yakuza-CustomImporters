@@ -29,7 +29,10 @@ public class GCTCustomImporter : ScriptedImporter
         GameObject createdStageObj = Process(gctData, m_ctx);
 
         if (createdStageObj != null)
+        {
+            m_ctx.AddObjectToAsset(gctData.Name.Text, createdStageObj);
             m_ctx.SetMainObject(createdStageObj);
+        }
     }
 
 
@@ -37,7 +40,32 @@ public class GCTCustomImporter : ScriptedImporter
     //ctx is an argument because SCTReader will call this if it realizes its not a true SCT (Y5 and Above)
     public static GameObject Process(GCTHeader gctData, AssetImportContext ctx)
     {
+        GameObject stageColl = new GameObject();
 
-        return null;
+        //Visualize vertices (Debug)
+        GameObject debugMeshObj = new GameObject();
+        MeshFilter debugMeshFilter = debugMeshObj.AddComponent<MeshFilter>();
+        debugMeshFilter.sharedMesh = DebugCreateVerticesMesh(gctData);
+
+        VisualizeVertex visualizer = debugMeshObj.AddComponent<VisualizeVertex>();
+        visualizer.Mf = debugMeshFilter;
+        visualizer.Scale = 0.1f;
+
+        debugMeshObj.transform.parent = stageColl.transform;
+
+        ctx.AddObjectToAsset("debug_test_vertices_mesh", debugMeshFilter.sharedMesh);
+
+        return stageColl;
+    }
+
+    //Creates a mesh that only holds vertex information (only for debugging pruposes)
+    private static Mesh DebugCreateVerticesMesh(GCTHeader data)
+    {
+        Mesh mesh = new Mesh();
+        mesh.name = "debug_vertices_mesh";
+        mesh.vertices = data.Vertices;
+        mesh.RecalculateNormals();
+
+        return mesh;
     }
 }
