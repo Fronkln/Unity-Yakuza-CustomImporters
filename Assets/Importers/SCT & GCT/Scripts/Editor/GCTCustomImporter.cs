@@ -37,6 +37,7 @@ public class GCTCustomImporter : ScriptedImporter
     //ctx is an argument because SCTReader will call this if it realizes its not a true SCT (Y5 and Above)
     public static GameObject Process(GCTHeader gctData, AssetImportContext ctx)
     {
+
         return null;
     }
 }

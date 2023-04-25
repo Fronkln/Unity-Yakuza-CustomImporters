@@ -5,16 +5,30 @@ using Yarhl.IO;
 
 public class SCTReader
 {
+    private SCTHeader m_header;
+    private DataReader m_reader;
+
     public static SCTHeader Read(DataReader reader)
     {
-        SCTHeader header = new SCTHeader();
-        header.Magic = reader.ReadString(4);
-        header.Endian = reader.ReadUInt32();
-        reader.Endianness = header.Endian == 258 ? EndiannessMode.BigEndian : EndiannessMode.LittleEndian;
+        SCTReader sctReader = new SCTReader();
+        sctReader.m_reader = reader;
+        sctReader.Read();
 
-        header.Flags = reader.ReadInt32();
-        reader.Stream.Position += 4;
+        return sctReader.m_header;
+    }
 
-        return header;
+    private void Read()
+    {
+        ReadHeader();
+    }
+    private void ReadHeader()
+    {
+        SCTHeader m_header = new SCTHeader();
+        m_header.Magic = m_reader.ReadString(4);
+        m_header.Endian = m_reader.ReadUInt32();
+        m_reader.Endianness = m_header.Endian == 258 ? EndiannessMode.BigEndian : EndiannessMode.LittleEndian;
+
+        m_header.Flags = m_reader.ReadInt32();
+        m_reader.Stream.Position += 4;
     }
 }
