@@ -55,9 +55,8 @@ public class GCTReader
         m_header.NodeDepth = m_reader.ReadUInt32();
         m_reader.Stream.Position += 8; //empty space
 
-        m_header.Bounds.center = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
-        m_header.Bounds.extents = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
-        m_reader.Stream.Position += 8; //unneeded bbox unks
+        m_header.Bounds.center = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+        m_header.Bounds.extents = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
         m_reader.Stream.Position += 36; //empty space
         m_reader.Stream.Position += 8; //unneeded node/shape counts we already knew
         m_reader.Stream.Position += 84; //empty space
@@ -121,9 +120,9 @@ public class GCTReader
     {
         m_reader.Stream.Seek(m_nodeAaBoxChunk, SeekMode.Start);
 
-        m_header.NodeAABoxes = new GCTAABox[m_shapeChunk.Count];
+        m_header.NodeAABoxes = new GCTAABox[m_nodeChunk.Count];
 
-        for(int i = 0; i < m_shapeChunk.Count; i++)
+        for(int i = 0; i < m_header.NodeAABoxes.Length; i++)
         {
             GCTAABox aabox = new GCTAABox();
             aabox.Center = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());

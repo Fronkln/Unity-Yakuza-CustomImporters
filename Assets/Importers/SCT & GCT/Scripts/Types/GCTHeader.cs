@@ -11,7 +11,7 @@ public class GCTHeader
     public uint NodeDepth;
     public Bounds Bounds;
 
-    public PXDHash Name;
+    public PXDHash Name = new PXDHash();
 
     public GCTShape[] Shapes;
     public GCTAABox[] NodeAABoxes;

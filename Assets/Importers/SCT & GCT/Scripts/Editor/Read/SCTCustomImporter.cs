@@ -12,6 +12,8 @@ using System.Xml.Linq;
 [ScriptedImporter(1, "sct")]
 public class SCTCustomImporter : ScriptedImporter
 {
+    public bool GenerateExportData = true;
+
     private AssetImportContext m_ctx;
     private DataReader m_reader = null;
     private DataStream m_readStream = null;
@@ -35,7 +37,7 @@ public class SCTCustomImporter : ScriptedImporter
             Debug.Log("OE/DE SCT");
 
             GCTHeader gctData = GCTReader.Read(m_reader);
-            createdCollisionObject = GCTCustomImporter.Process(gctData, m_ctx);
+            createdCollisionObject = GCTCustomImporter.Process(gctData, m_ctx, GenerateExportData);
         }
         else //True SCT, Yakuza 3 & 4
         {

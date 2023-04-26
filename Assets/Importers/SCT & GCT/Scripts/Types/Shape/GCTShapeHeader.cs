@@ -1,3 +1,4 @@
+[System.Serializable]
 public struct GCTShapeHeader
 {
     public int Flags;

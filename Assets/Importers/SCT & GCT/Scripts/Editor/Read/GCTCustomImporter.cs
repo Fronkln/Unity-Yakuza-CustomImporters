@@ -9,10 +9,13 @@ using UnityEditor.Experimental.AssetImporters;
 using Yarhl.IO;
 using System.IO;
 using System.Linq;
+using Unity.VisualScripting;
 
 [ScriptedImporter(1, "gct")]
 public class GCTCustomImporter : ScriptedImporter
 {
+    public bool GenerateExportData = true;
+
     private AssetImportContext m_ctx;
     private DataReader m_reader = null;
     private DataStream m_readStream = null;
@@ -28,7 +31,7 @@ public class GCTCustomImporter : ScriptedImporter
         m_reader = new DataReader(m_readStream) { DefaultEncoding = Encoding.GetEncoding(932) };
 
         GCTHeader gctData = GCTReader.Read(m_reader);
-        GameObject createdStageObj = Process(gctData, m_ctx);
+        GameObject createdStageObj = Process(gctData, m_ctx, GenerateExportData);
 
         if (createdStageObj != null)
         {
@@ -39,8 +42,8 @@ public class GCTCustomImporter : ScriptedImporter
 
 
     //Create the stage collision object
-    //ctx is an argument because SCTReader will call this if it realizes its not a true SCT (Y5 and Above)
-    public static GameObject Process(GCTHeader gctData, AssetImportContext ctx)
+    //ctx and generateExportData is an argument because SCTReader will call this if it realizes its not a true SCT (Y5 and Above)
+    public static GameObject Process(GCTHeader gctData, AssetImportContext ctx, bool generateExportData)
     {
         GameObject stageColl = new GameObject();
 
@@ -50,13 +53,23 @@ public class GCTCustomImporter : ScriptedImporter
 
             if (shape is GCTShapePrimitive)
             {
-                GameObject createdPrimitive = GenerateGCTPrimitive(gctData, shape as GCTShapePrimitive, i, ctx);
+                GameObject createdPrimitive = GenerateGCTPrimitive(gctData, shape as GCTShapePrimitive, i, ctx, generateExportData);
 
                 if(createdPrimitive != null)
                     createdPrimitive.transform.parent = stageColl.transform;
             }
         }
 
+        if (generateExportData)
+        {
+            GCTExporter exporter = stageColl.gameObject.AddComponent<GCTExporter>();
+            exporter.Flags = gctData.Flags;
+            exporter.HitFilter = gctData.HitFilter;
+            exporter.NodeDepth = gctData.NodeDepth;
+            exporter.Bounds = gctData.Bounds;
+        }
+
+        /*
         for(int i = 0; i < gctData.NodeAABoxes.Length; i++)
         {
             GCTAABox aaBox = gctData.NodeAABoxes[i];
@@ -65,7 +78,9 @@ public class GCTCustomImporter : ScriptedImporter
             if (generatedAABox != null)
                 generatedAABox.transform.parent = stageColl.transform;
         }
-
+        */
+        //Absolutely useless
+        /*
         for (int i = 0; i < gctData.ShapeAABoxes.Length; i++)
         {
             GCTAABox aaBox = gctData.ShapeAABoxes[i];
@@ -74,12 +89,13 @@ public class GCTCustomImporter : ScriptedImporter
             if (generatedAABox != null)
                 generatedAABox.transform.parent = stageColl.transform;
         }
+        */
 
         return stageColl;
     }
 
 
-    private static GameObject GenerateAABoxTest(GCTAABox aaBoxData)
+    private static BoxCollider GenerateAABoxTest(GCTAABox aaBoxData)
     {
         GameObject collider = new GameObject("AABox Collider");
         BoxCollider boxColl = collider.gameObject.AddComponent<BoxCollider>();
@@ -87,11 +103,11 @@ public class GCTCustomImporter : ScriptedImporter
         boxColl.size = aaBoxData.Extents * 2;
 
 
-        return collider;
+        return boxColl;
     }
 
     //Creates a mesh that only holds vertex information (only for debugging pruposes)
-    private static GameObject GenerateGCTPrimitive(GCTHeader header, GCTShapePrimitive primitive, int index, AssetImportContext ctx)
+    private static GameObject GenerateGCTPrimitive(GCTHeader header, GCTShapePrimitive primitive, int index, AssetImportContext ctx, bool generateExportData)
     {
         string name = primitive.Header.GetShapeType().ToString() + "_" + index; //Quad_1
 
@@ -137,6 +153,27 @@ public class GCTCustomImporter : ScriptedImporter
 
         MeshCollider coll = primitiveObj.AddComponent<MeshCollider>();
         coll.sharedMesh = mesh;
+
+        GCTAABox boundingBox = header.ShapeAABoxes[index];
+
+        BoxCollider generatedAABox = GenerateAABoxTest(boundingBox);
+        generatedAABox.transform.parent = primitiveObj.transform;
+        generatedAABox.name = "AA Box " + index;
+
+
+        if(generateExportData)
+        {
+            GCTExportData exportComponent = primitiveObj.AddComponent<GCTExportData>();
+            exportComponent.AABox = generatedAABox;
+            exportComponent.Mesh = mesh;
+            exportComponent.Type = primitive.Header.GetShapeType();
+            exportComponent.NodeHeader = primitive.Header;
+            exportComponent.Product = primitive.Product;
+            exportComponent.AABoxHitFilter = boundingBox.HitFilter;
+
+            if (index < header.NodeAABoxes.Length)
+                exportComponent.GenerateNodeAABox = true;
+        }
 
         ctx.AddObjectToAsset(name, mesh);
 

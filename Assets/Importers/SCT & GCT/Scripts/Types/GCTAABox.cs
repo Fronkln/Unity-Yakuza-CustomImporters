@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class GCTAABox
+public struct GCTAABox
 {
     public Vector4 Center;
     public Vector3 Extents;
