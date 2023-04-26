@@ -13,5 +13,7 @@ public class GCTHeader
 
     public PXDHash Name;
 
+    public GCTShape[] Shapes;
     public Vector3[] Vertices;
+    public int[] Indices;
 }

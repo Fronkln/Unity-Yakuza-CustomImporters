@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using System.Text;
 #if UNITY_2020_2_OR_NEWER
 using UnityEditor.AssetImporters;
@@ -7,6 +8,7 @@ using UnityEditor.Experimental.AssetImporters;
 #endif
 using Yarhl.IO;
 using System.IO;
+using System.Linq;
 
 [ScriptedImporter(1, "gct")]
 public class GCTCustomImporter : ScriptedImporter
@@ -42,30 +44,59 @@ public class GCTCustomImporter : ScriptedImporter
     {
         GameObject stageColl = new GameObject();
 
-        //Visualize vertices (Debug)
-        GameObject debugMeshObj = new GameObject();
-        MeshFilter debugMeshFilter = debugMeshObj.AddComponent<MeshFilter>();
-        debugMeshFilter.sharedMesh = DebugCreateVerticesMesh(gctData);
+        for (int i = 0; i < gctData.Shapes.Length; i++)
+        {
+            GCTShape shape = gctData.Shapes[i];
 
-        VisualizeVertex visualizer = debugMeshObj.AddComponent<VisualizeVertex>();
-        visualizer.Mf = debugMeshFilter;
-        visualizer.Scale = 0.1f;
-
-        debugMeshObj.transform.parent = stageColl.transform;
-
-        ctx.AddObjectToAsset("debug_test_vertices_mesh", debugMeshFilter.sharedMesh);
+            if (shape is GCTShapePrimitive)
+            {
+                GameObject createdPrimitive = GenerateGCTPrimitive(gctData, shape as GCTShapePrimitive, i, ctx);
+                createdPrimitive.transform.parent = stageColl.transform;
+            }
+        }
 
         return stageColl;
     }
 
     //Creates a mesh that only holds vertex information (only for debugging pruposes)
-    private static Mesh DebugCreateVerticesMesh(GCTHeader data)
+    private static GameObject GenerateGCTPrimitive(GCTHeader header, GCTShapePrimitive primitive, int index, AssetImportContext ctx)
     {
+        string name = primitive.Header.GetShapeType().ToString() + "_" + index; //Quad_1
+        Debug.Log(name);
+
+        GameObject primitiveObj = new GameObject(name + "_G");
+
+        List<Vector3> vertices = new List<Vector3>();
+
+        int[] indices = new int[primitive.Indices.Length];
+        uint smallestIndex = primitive.Indices.Min();
+
+        for (int i = 0; i < indices.Length; i++)
+        {
+            vertices.Add(header.Vertices[primitive.Indices[i]]);
+
+           //vertices.Add(header.Vertices[header.Indices[i]]);
+            indices[i] = i;        
+        }
+
+        MeshTopology topologyType;
+
+        if (primitive.Header.GetShapeType() == GCTShapeType.Quad)
+            topologyType = MeshTopology.Quads;
+        else
+            topologyType = MeshTopology.Triangles;
+
         Mesh mesh = new Mesh();
-        mesh.name = "debug_vertices_mesh";
-        mesh.vertices = data.Vertices;
+        mesh.name = name;
+        mesh.SetVertices(vertices.ToArray());
+        mesh.SetIndices(indices, topologyType, 0);
         mesh.RecalculateNormals();
 
-        return mesh;
+        MeshCollider coll = primitiveObj.AddComponent<MeshCollider>();
+        coll.sharedMesh = mesh;
+
+        ctx.AddObjectToAsset(name, mesh);
+
+        return primitiveObj;
     }
 }

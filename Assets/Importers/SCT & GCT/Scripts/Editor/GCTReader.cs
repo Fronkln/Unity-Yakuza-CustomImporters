@@ -1,6 +1,7 @@
 using PlasticPipe.PlasticProtocol.Messages;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -30,6 +31,24 @@ public class GCTReader
     {
         ReadHeader();
         ReadVertices();
+        ReadShapes();
+
+        List<int> indices = new List<int>();
+
+        //Generate indices buffer
+        foreach(GCTShapePrimitive prim in m_header.Shapes)
+            foreach(uint u in prim.Indices)
+            {
+                int i = (int)u;
+
+                if (!indices.Contains(i))
+                    indices.Add(i);
+
+                if (!indices.Contains((int)prim.NormalIndex))
+                    indices.Add((int)prim.NormalIndex);
+            }
+
+        m_header.Indices = indices.OrderBy(x => x).ToArray();
     }
     private void ReadHeader()
     {
@@ -59,6 +78,40 @@ public class GCTReader
         m_reader.Stream.Position += 84; //empty space
 
         m_header.Name = m_reader.Read<PXDHash>();
+    }
+
+    private void ReadShapes()
+    {
+        m_reader.Stream.Seek(m_shapeChunk.Pointer, SeekMode.Start);
+
+        m_header.Shapes = new GCTShape[m_shapeChunk.Count];
+
+        for(int i = 0; i < m_header.Shapes.Length; i++)
+        {
+            GCTShapeHeader header = new GCTShapeHeader();
+            header.Flags = m_reader.ReadInt32();
+            header.Attributes = m_reader.ReadInt32();
+
+            GCTShape readShape = null;
+            GCTShapeType shapeType = header.GetShapeType();
+
+            switch(shapeType)
+            {
+                default:
+                    throw new System.Exception("Don't know how to read shape type: " + shapeType);
+                case GCTShapeType.Triangle:
+                    readShape = new GCTShapeTriangle();
+                    break;
+                case GCTShapeType.Quad:
+                    readShape = new GCTShapeQuad();
+                    break;
+            }
+
+            readShape.Header = header;
+            readShape.ReadData(m_reader);
+            m_header.Shapes[i] = readShape;
+        }
+        
     }
 
     private void ReadVertices()
