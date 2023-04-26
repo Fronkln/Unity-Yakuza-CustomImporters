@@ -14,6 +14,8 @@ public class GCTHeader
     public PXDHash Name;
 
     public GCTShape[] Shapes;
+    public GCTAABox[] NodeAABoxes;
+    public GCTAABox[] ShapeAABoxes;
     public Vector3[] Vertices;
     public int[] Indices;
 }

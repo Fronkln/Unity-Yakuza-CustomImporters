@@ -57,7 +57,37 @@ public class GCTCustomImporter : ScriptedImporter
             }
         }
 
+        for(int i = 0; i < gctData.NodeAABoxes.Length; i++)
+        {
+            GCTAABox aaBox = gctData.NodeAABoxes[i];
+            GameObject generatedAABox = GenerateAABoxTest(aaBox);
+
+            if (generatedAABox != null)
+                generatedAABox.transform.parent = stageColl.transform;
+        }
+
+        for (int i = 0; i < gctData.ShapeAABoxes.Length; i++)
+        {
+            GCTAABox aaBox = gctData.ShapeAABoxes[i];
+            GameObject generatedAABox = GenerateAABoxTest(aaBox);
+
+            if (generatedAABox != null)
+                generatedAABox.transform.parent = stageColl.transform;
+        }
+
         return stageColl;
+    }
+
+
+    private static GameObject GenerateAABoxTest(GCTAABox aaBoxData)
+    {
+        GameObject collider = new GameObject("AABox Collider");
+        BoxCollider boxColl = collider.gameObject.AddComponent<BoxCollider>();
+        boxColl.center = aaBoxData.Center;
+        boxColl.size = aaBoxData.Extents * 2;
+
+
+        return collider;
     }
 
     //Creates a mesh that only holds vertex information (only for debugging pruposes)
@@ -88,6 +118,9 @@ public class GCTCustomImporter : ScriptedImporter
            //vertices.Add(header.Vertices[header.Indices[i]]);
             indices[i] = i;        
         }
+
+        //Let's not forget to include the normal here.
+        vertices.Add(header.Vertices[primitive.NormalIndex]);
 
         MeshTopology topologyType;
 

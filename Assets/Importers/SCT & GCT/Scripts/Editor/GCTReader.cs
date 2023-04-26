@@ -32,23 +32,8 @@ public class GCTReader
         ReadHeader();
         ReadVertices();
         ReadShapes();
-
-        List<int> indices = new List<int>();
-
-        //Generate indices buffer
-        foreach(GCTShapePrimitive prim in m_header.Shapes)
-            foreach(uint u in prim.Indices)
-            {
-                int i = (int)u;
-
-                if (!indices.Contains(i))
-                    indices.Add(i);
-
-                if (!indices.Contains((int)prim.NormalIndex))
-                    indices.Add((int)prim.NormalIndex);
-            }
-
-        m_header.Indices = indices.OrderBy(x => x).ToArray();
+        ReadNodeAABoxes();
+        ReadShapeAABoxes();
     }
     private void ReadHeader()
     {
@@ -128,6 +113,39 @@ public class GCTReader
         for(int i = 0; i < numVertices; i++)
         {
             m_header.Vertices[i] = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+        }
+    }
+
+
+    private void ReadNodeAABoxes()
+    {
+        m_reader.Stream.Seek(m_nodeAaBoxChunk, SeekMode.Start);
+
+        m_header.NodeAABoxes = new GCTAABox[m_shapeChunk.Count];
+
+        for(int i = 0; i < m_shapeChunk.Count; i++)
+        {
+            GCTAABox aabox = new GCTAABox();
+            aabox.Center = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+            aabox.Extents = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+            aabox.HitFilter = m_reader.ReadInt32();
+            m_header.NodeAABoxes[i] = aabox;
+        }
+    }
+
+    private void ReadShapeAABoxes()
+    {
+        m_reader.Stream.Seek(m_shapeAaBoxChunk, SeekMode.Start);
+
+        m_header.ShapeAABoxes = new GCTAABox[m_shapeChunk.Count];
+
+        for (int i = 0; i < m_shapeChunk.Count; i++)
+        {
+            GCTAABox aabox = new GCTAABox();
+            aabox.Center = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+            aabox.Extents = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+            aabox.HitFilter = m_reader.ReadInt32();
+            m_header.ShapeAABoxes[i] = aabox;
         }
     }
 }
