@@ -51,7 +51,9 @@ public class GCTCustomImporter : ScriptedImporter
             if (shape is GCTShapePrimitive)
             {
                 GameObject createdPrimitive = GenerateGCTPrimitive(gctData, shape as GCTShapePrimitive, i, ctx);
-                createdPrimitive.transform.parent = stageColl.transform;
+
+                if(createdPrimitive != null)
+                    createdPrimitive.transform.parent = stageColl.transform;
             }
         }
 
@@ -62,7 +64,6 @@ public class GCTCustomImporter : ScriptedImporter
     private static GameObject GenerateGCTPrimitive(GCTHeader header, GCTShapePrimitive primitive, int index, AssetImportContext ctx)
     {
         string name = primitive.Header.GetShapeType().ToString() + "_" + index; //Quad_1
-        Debug.Log(name);
 
         GameObject primitiveObj = new GameObject(name + "_G");
 
@@ -73,7 +74,16 @@ public class GCTCustomImporter : ScriptedImporter
 
         for (int i = 0; i < indices.Length; i++)
         {
-            vertices.Add(header.Vertices[primitive.Indices[i]]);
+            try
+            {
+                vertices.Add(header.Vertices[primitive.Indices[i]]);
+            }
+            catch
+            {
+                Debug.LogError("Indice error at " + name);
+                DestroyImmediate(primitiveObj);
+                return null;
+            }
 
            //vertices.Add(header.Vertices[header.Indices[i]]);
             indices[i] = i;        

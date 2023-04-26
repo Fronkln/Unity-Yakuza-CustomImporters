@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using Codice.CM.Common;
 
 [ScriptedImporter(1, "gmd")]
 public class GMDCustomImporter : ScriptedImporter
@@ -350,7 +351,7 @@ public class GMDCustomImporter : ScriptedImporter
 
     private EndiannessMode DetermineFileEndian()
     {
-        if (Header.FileEndian == 2)
+        if (Header.FileEndian == 2 || Header.FileEndian == 1)
             return EndiannessMode.BigEndian;
         else
             return EndiannessMode.LittleEndian;
