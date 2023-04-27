@@ -170,9 +170,13 @@ public class GCTCustomImporter : ScriptedImporter
             exportComponent.NodeHeader = primitive.Header;
             exportComponent.Product = primitive.Product;
             exportComponent.AABoxHitFilter = boundingBox.HitFilter;
+            exportComponent.ShapeUnkFloat = boundingBox.Center.w;
 
             if (index < header.NodeAABoxes.Length)
+            {
+                exportComponent.NodeAABox = header.NodeAABoxes[index];
                 exportComponent.GenerateNodeAABox = true;
+            }
         }
 
         ctx.AddObjectToAsset(name, mesh);

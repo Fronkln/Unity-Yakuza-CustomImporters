@@ -110,8 +110,8 @@ public static class GCTWriter
         writer.Stream.Position = vectorPtrPos;
         writer.Write(verticesStart);
 
-        writer.Stream.Position = 8;
-        writer.Write(writer.Stream.Length);
+        writer.Stream.Position = 12;
+        writer.Write((uint)writer.Stream.Length);
         writer.Stream.WriteTo(path);
     }
 

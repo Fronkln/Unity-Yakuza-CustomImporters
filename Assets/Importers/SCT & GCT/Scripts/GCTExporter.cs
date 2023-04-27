@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class GCTExporter : MonoBehaviour
 {
+    public string OutputPath = "";
+    public bool IsOEGct = false;
+
     public int Flags;
     public uint HitFilter;
     public uint NodeDepth;
@@ -17,6 +20,9 @@ public class GCTExporter : MonoBehaviour
 
     public void Export()
     {
+        if (string.IsNullOrEmpty(OutputPath))
+            return;
+
         m_generatedHeader = new GCTHeader();
         m_vertices = new List<Vector3>();
 
@@ -28,7 +34,7 @@ public class GCTExporter : MonoBehaviour
 
         m_generatedHeader.Vertices = m_vertices.ToArray();
         m_generatedHeader.Shapes = shapes.ToArray();
-        m_generatedHeader.NodeAABoxes = outputData.Where(x => x.GenerateNodeAABox == true).Select(x => x.OutputAABox).ToArray();
+        m_generatedHeader.NodeAABoxes = outputData.Where(x => x.GenerateNodeAABox == true).Select(x => x.OutputNodeAABox).ToArray();
         m_generatedHeader.ShapeAABoxes = outputData.Select(x => x.OutputAABox).ToArray();
         m_generatedHeader.Flags = Flags;
         m_generatedHeader.HitFilter = HitFilter;
@@ -36,7 +42,7 @@ public class GCTExporter : MonoBehaviour
         m_generatedHeader.Bounds = Bounds;
         m_generatedHeader.Name.Set(transform.name);
 
-        GCTWriter.Write(m_generatedHeader, true, "C:/Users/orhan/Desktop/test_gct.gct");
+        GCTWriter.Write(m_generatedHeader, IsOEGct, OutputPath);
 
         //Clear
         m_generatedHeader = new GCTHeader();

@@ -11,6 +11,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Codice.CM.Common;
+using UnityEditor;
 
 [ScriptedImporter(1, "gmd")]
 public class GMDCustomImporter : ScriptedImporter
@@ -250,11 +251,11 @@ public class GMDCustomImporter : ScriptedImporter
 
             for(int i = 0; i < vertexCount; i++)
             {
-                switch (format)
+                switch (perVertexSize)
                 {
                     default:
-                        throw new Exception($"Unknown format vertex format {format}");
-                    case 4:
+                        throw new Exception($"Unknown format vertex stride {perVertexSize}");
+                    case 32:
                         GMDVertex vertex4 = new GMDVertex();
                         vertex4.Position = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
                         vertex4.BoneWeights = m_reader.ReadBytes(4);
@@ -266,10 +267,6 @@ public class GMDCustomImporter : ScriptedImporter
 
                         vertices[i] = vertex4;
                         break;
-                    case -268435468:
-                        goto case 4;
-                    case -268480524:
-                        goto case 4;
                 }
             }
 
@@ -435,7 +432,9 @@ public class GMDCustomImporter : ScriptedImporter
             //A basic mesh filter and renderer for now.
             GameObject meshObj = new GameObject();
             MeshFilter filter = meshObj.AddComponent<MeshFilter>();
-            meshObj.gameObject.AddComponent<MeshRenderer>();
+            MeshRenderer mr = meshObj.gameObject.AddComponent<MeshRenderer>();
+            mr.material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+
             meshObj.transform.parent = nodeMap[mesh.NodeIndex].transform;
             meshObj.name = mesh.Index.ToString();
             filter.mesh = meshInst;

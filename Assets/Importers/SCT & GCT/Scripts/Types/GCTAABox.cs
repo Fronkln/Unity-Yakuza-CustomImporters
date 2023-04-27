@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[System.Serializable]
 public struct GCTAABox
 {
     public Vector4 Center;

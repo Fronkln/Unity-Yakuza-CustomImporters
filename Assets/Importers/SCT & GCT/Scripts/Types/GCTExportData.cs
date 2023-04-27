@@ -15,7 +15,9 @@ public class GCTExportData : MonoBehaviour
     public GCTShapeHeader NodeHeader;
     public GCTShapeType Type;
     public bool GenerateNodeAABox;
+    public GCTAABox NodeAABox;
 
+    public float ShapeUnkFloat;
 
     public GCTExportOutput Export()
     {
@@ -26,11 +28,15 @@ public class GCTExportData : MonoBehaviour
 
         List<Vector3> actualVertices = new List<Vector3>(Mesh.vertices);
 
+        
         for(int i = 0; i < actualVertices.Count; i++)
         {
+            Matrix4x4 localToWorld = transform.localToWorldMatrix;
+            actualVertices[i] = localToWorld.MultiplyPoint3x4(Mesh.vertices[i]);
+
             //Doesnt make a difference for GCT primitives
             //Is important for Unity ones however.
-            actualVertices[i] += transform.position;
+            //actualVertices[i] += transform.position;
         }
 
         switch(Type)
@@ -45,8 +51,12 @@ public class GCTExportData : MonoBehaviour
                 break;
         }
 
-        output.OutputAABox.Center = transform.position + AABox.center;
-        output.OutputAABox.Extents = AABox.size / 2;
+        //normalize normal
+        actualVertices[actualVertices.Count - 1] = actualVertices[actualVertices.Count - 1].normalized;
+
+        output.OutputAABox.Center = AABox.bounds.center;
+        output.OutputAABox.Center.w = ShapeUnkFloat;
+        output.OutputAABox.Extents = AABox.bounds.extents;
         output.OutputAABox.HitFilter = AABoxHitFilter;
 
         output.ShapeHeader = NodeHeader;
@@ -55,6 +65,7 @@ public class GCTExportData : MonoBehaviour
         output.Indices = Mesh.GetIndices(0);
         output.Product = Product;
         output.GenerateNodeAABox = GenerateNodeAABox;
+        output.OutputNodeAABox = NodeAABox;
 
         return output;
     }

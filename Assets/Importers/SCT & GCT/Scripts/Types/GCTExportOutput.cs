@@ -18,4 +18,5 @@ public struct GCTExportOutput
 
     public GCTAABox OutputAABox;
     public bool GenerateNodeAABox;
+    public GCTAABox OutputNodeAABox;
 }
