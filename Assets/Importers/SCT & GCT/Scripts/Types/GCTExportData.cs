@@ -94,12 +94,10 @@ public class GCTExportData : MonoBehaviour
             failed = true;
         }
 
-        switch(Type)
+        if(Type != GCTShapeType.Quad && Type != GCTShapeType.Triangle)
         {
-            default:
-                Debug.LogError("Unsupported shape type for export: " + Type + " GameObject: " + transform.name);
-               // failed = true;
-                break;
+            Debug.LogError("Unsupported shape type for export: " + Type + " GameObject: " + transform.name);
+            failed = true;
         }
 
         return !failed;
