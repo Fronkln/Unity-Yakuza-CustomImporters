@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class GCTExporter : MonoBehaviour
 {
     public string OutputPath = "";
@@ -20,14 +21,23 @@ public class GCTExporter : MonoBehaviour
 
     public void Export()
     {
+        StartCoroutine(ExportRoutine());
+    }
+
+    private IEnumerator ExportRoutine()
+    {
         if (string.IsNullOrEmpty(OutputPath))
-            return;
+            yield return null;
 
         m_generatedHeader = new GCTHeader();
         m_vertices = new List<Vector3>();
 
-        GCTExportData[] exportingShapes = gameObject.GetComponentsInChildren<GCTExportData>();
-        
+        transform.localScale = new Vector3(1, 1, 1);
+
+        yield return new WaitForSecondsRealtime(0.1f);
+
+        GCTExportData[] exportingShapes = gameObject.GetComponentsInChildren<GCTExportData>().Where(x => x.gameObject.activeInHierarchy).ToArray();
+
         //Vertices equal to zero = assume didnt export successfully and filter out.
         GCTExportOutput[] outputData = exportingShapes.Select(x => x.Export()).Where(x => x.Vertices.Length > 0).ToArray();
         GCTShape[] shapes = outputData.Select(x => ConvertToShape(x)).Where(x => x != null).ToArray();
@@ -43,6 +53,9 @@ public class GCTExporter : MonoBehaviour
         m_generatedHeader.Name.Set(transform.name);
 
         GCTWriter.Write(m_generatedHeader, IsOEGct, OutputPath);
+
+        transform.localScale = new Vector3(-1, 1, 1);
+
 
         //Clear
         m_generatedHeader = new GCTHeader();

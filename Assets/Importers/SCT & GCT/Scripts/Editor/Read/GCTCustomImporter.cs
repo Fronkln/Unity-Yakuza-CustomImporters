@@ -67,6 +67,7 @@ public class GCTCustomImporter : ScriptedImporter
             exporter.HitFilter = gctData.HitFilter;
             exporter.NodeDepth = gctData.NodeDepth;
             exporter.Bounds = gctData.Bounds;
+            exporter.OutputPath = ctx.assetPath;
         }
 
         /*
@@ -90,6 +91,9 @@ public class GCTCustomImporter : ScriptedImporter
                 generatedAABox.transform.parent = stageColl.transform;
         }
         */
+
+        //flip it so the view aligns with the game, it will become 1 during conversion, then -1 again
+        stageColl.transform.localScale = new Vector3(-1, 1, 1);
 
         return stageColl;
     }
@@ -168,9 +172,7 @@ public class GCTCustomImporter : ScriptedImporter
             exportComponent.Mesh = mesh;
             exportComponent.Type = primitive.Header.GetShapeType();
             exportComponent.NodeHeader = primitive.Header;
-            exportComponent.Product = primitive.Product;
             exportComponent.AABoxHitFilter = boundingBox.HitFilter;
-            exportComponent.ShapeUnkFloat = boundingBox.Center.w;
 
             if (index < header.NodeAABoxes.Length)
             {

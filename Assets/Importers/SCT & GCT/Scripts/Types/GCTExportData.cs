@@ -8,16 +8,11 @@ public class GCTExportData : MonoBehaviour
     public BoxCollider AABox;
     public int AABoxHitFilter;
 
-    [Header("Temp, calculate later")]
-    public float Product;
-
     [Header("Dont Change If You Have No Clue")]
     public GCTShapeHeader NodeHeader;
     public GCTShapeType Type;
     public bool GenerateNodeAABox;
     public GCTAABox NodeAABox;
-
-    public float ShapeUnkFloat;
 
     public GCTExportOutput Export()
     {
@@ -27,16 +22,16 @@ public class GCTExportData : MonoBehaviour
         GCTExportOutput output = new GCTExportOutput();
 
         List<Vector3> actualVertices = new List<Vector3>(Mesh.vertices);
+        int normalIdx = actualVertices.Count - 1;
 
-        
-        for(int i = 0; i < actualVertices.Count; i++)
+
+
+        for (int i = 0; i < normalIdx; i++)
         {
             Matrix4x4 localToWorld = transform.localToWorldMatrix;
-            actualVertices[i] = localToWorld.MultiplyPoint3x4(Mesh.vertices[i]);
 
-            //Doesnt make a difference for GCT primitives
-            //Is important for Unity ones however.
-            //actualVertices[i] += transform.position;
+            if(i < actualVertices.Count - 1)
+                actualVertices[i] = localToWorld.MultiplyPoint3x4(Mesh.vertices[i]);
         }
 
         switch(Type)
@@ -55,7 +50,7 @@ public class GCTExportData : MonoBehaviour
         actualVertices[actualVertices.Count - 1] = actualVertices[actualVertices.Count - 1].normalized;
 
         output.OutputAABox.Center = AABox.bounds.center;
-        output.OutputAABox.Center.w = ShapeUnkFloat;
+        output.OutputAABox.Center.w = AABox.bounds.center.magnitude;
         output.OutputAABox.Extents = AABox.bounds.extents;
         output.OutputAABox.HitFilter = AABoxHitFilter;
 
@@ -63,9 +58,10 @@ public class GCTExportData : MonoBehaviour
         output.Type = Type;
         output.Vertices = actualVertices.ToArray();
         output.Indices = Mesh.GetIndices(0);
-        output.Product = Product;
+        output.Product = Vector3.Dot(actualVertices[normalIdx], actualVertices[0]);
         output.GenerateNodeAABox = GenerateNodeAABox;
         output.OutputNodeAABox = NodeAABox;
+        output.OutputNodeAABox.Center.w = output.OutputNodeAABox.Center.magnitude;
 
         return output;
     }

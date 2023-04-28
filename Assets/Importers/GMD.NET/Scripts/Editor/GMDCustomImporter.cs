@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Codice.CM.Common;
 using UnityEditor;
+using UnityEngine.UIElements;
 
 [ScriptedImporter(1, "gmd")]
 public class GMDCustomImporter : ScriptedImporter
@@ -227,9 +228,6 @@ public class GMDCustomImporter : ScriptedImporter
                     index = (ushort)(index - mesh.MinIndex);
                 }
 
-                if(mesh.Index == 0)
-                    Debug.Log(index);
-
                 indices.Add(index);
             }
 
@@ -251,23 +249,26 @@ public class GMDCustomImporter : ScriptedImporter
 
             for(int i = 0; i < vertexCount; i++)
             {
+                GMDVertex vertex4 = new GMDVertex();
+                vertex4.Position = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+
                 switch (perVertexSize)
                 {
                     default:
-                        throw new Exception($"Unknown format vertex stride {perVertexSize}");
+                        Debug.LogWarning($"Unknown format vertex stride {perVertexSize}");
+                        m_reader.Stream.Position += perVertexSize - 12;
+                        break;
                     case 32:
-                        GMDVertex vertex4 = new GMDVertex();
-                        vertex4.Position = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
                         vertex4.BoneWeights = m_reader.ReadBytes(4);
                         vertex4.BoneIndices = m_reader.ReadBytes(4);
                         
                         vertex4.Normal = new Vector4_32(m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte());
                         vertex4.Tangent = new Vector4_32(m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte());
                         vertex4.UV = new Vector2Half(Half.ToHalf(m_reader.ReadUInt16()), -Half.ToHalf(m_reader.ReadUInt16()));
-
-                        vertices[i] = vertex4;
                         break;
                 }
+
+                vertices[i] = vertex4;
             }
 
             return vertices;
@@ -433,7 +434,7 @@ public class GMDCustomImporter : ScriptedImporter
             GameObject meshObj = new GameObject();
             MeshFilter filter = meshObj.AddComponent<MeshFilter>();
             MeshRenderer mr = meshObj.gameObject.AddComponent<MeshRenderer>();
-            mr.material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat");
+            mr.material = AssetDatabase.LoadAssetAtPath<Material>("Assets/TestMaterial.mat");
 
             meshObj.transform.parent = nodeMap[mesh.NodeIndex].transform;
             meshObj.name = mesh.Index.ToString();
