@@ -107,9 +107,9 @@ public class GMDCustomImporter : ScriptedImporter
         {
             GMDNode bone = new GMDNode();
 
-            bone.BoneID = m_reader.ReadInt32();
-            bone.ChildBoneID = m_reader.ReadInt32();
-            bone.ParentBoneID = m_reader.ReadInt32();
+            bone.NodeID = m_reader.ReadInt32();
+            bone.ParentOfNodeID = m_reader.ReadInt32();
+            bone.SiblingOfNodeID = m_reader.ReadInt32();
             bone.ObjectIndex = m_reader.ReadInt32();
             bone.MatrixIndex = m_reader.ReadInt32();
 
@@ -382,37 +382,48 @@ public class GMDCustomImporter : ScriptedImporter
 
         Dictionary<uint, GameObject> nodeMap = new Dictionary<uint, GameObject>();
 
-        //Create the nodes
-        foreach(GMDNode node in Nodes)
+        var parentStack = new Stack<Transform>();
+        // Create the nodes
+        foreach (GMDNode node in Nodes)
         {
-            GameObject bone = new GameObject("Node");
-            bone.transform.parent = model.transform;
+            GameObject nodeObj = new GameObject("Node");
+
+            if (parentStack.Count == 0) {
+                nodeObj.transform.parent = model.transform;
+            } else {
+                nodeObj.transform.parent = parentStack.Peek();
+            }
 
             //Bone visualization, remove these 3 lines if you want
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             cube.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-            cube.transform.parent = bone.transform;
+            cube.transform.parent = nodeObj.transform;
 
             if(node.NameIdx > -1)
-                bone.name = NodeNames[node.NameIdx];
+                nodeObj.name = NodeNames[node.NameIdx];
 
-            bone.transform.position = node.WorldPosition;
-            bone.transform.rotation = node.Rotation;
+            nodeObj.transform.position = node.WorldPosition;
+            nodeObj.transform.rotation = node.Rotation;
+            nodeObj.transform.localScale = node.Scale;
 
-            nodeMap[(uint)node.BoneID] = bone;
-        }
+            switch (node.StackOp) {
+                case NodeStackOp.NoOp:
+                    break;
+                case NodeStackOp.PopPush:
+                    parentStack.Pop();
+                    parentStack.Push(nodeObj.transform);
+                    break;
+                case NodeStackOp.Pop:
+                    parentStack.Pop();
+                    break;
+                case NodeStackOp.Push:
+                    parentStack.Push(nodeObj.transform);
+                    break;
+                default:
+                    throw new InvalidOperationException("Invalid NodeStackOp " + node.StackOp);
+            }
 
-        //TODO: TheTurboTurnip help me fix this preasu
-        foreach(var kv in nodeMap)
-        {
-            GMDNode nodeInfo = Nodes[kv.Key];
-            GameObject nodeObject = kv.Value;
-
-            if (nodeInfo.ParentBoneID > -1)
-                nodeMap[(uint)nodeInfo.ParentBoneID].transform.parent = nodeObject.transform;
-
-            if (nodeInfo.ChildBoneID > -1)
-                nodeMap[(uint)nodeInfo.ChildBoneID].transform.parent = nodeObject.transform;
+            nodeMap[(uint)node.NodeID] = nodeObj;
         }
 
         foreach(GMDMesh mesh in Meshes)
