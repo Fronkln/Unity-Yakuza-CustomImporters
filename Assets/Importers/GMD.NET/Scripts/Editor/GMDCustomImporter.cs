@@ -81,7 +81,7 @@ public class GMDCustomImporter : ScriptedImporter
         Header.MaterialParamsChunk = m_reader.Read<SizedPointer>();
         Header.MatrixListChunk = m_reader.Read<SizedPointer>();
         Header.VertexBufferChunk = m_reader.Read<SizedPointer>();
-        Header.VertexBufferPoolChunk = m_reader.Read<SizedPointer>();
+        Header.VertexBytesChunk = m_reader.Read<SizedPointer>();
         Header.MaterialNameChunk = m_reader.Read<SizedPointer>();
         Header.ShaderNameChunk = m_reader.Read<SizedPointer>();
         Header.NodeNameChunk = m_reader.Read<SizedPointer>();
@@ -180,58 +180,57 @@ public class GMDCustomImporter : ScriptedImporter
             mesh.VertexOffsetFromIndex = m_reader.ReadUInt32();
             mesh.MinIndex = m_reader.ReadUInt32();
 
-            //Vertex
-            uint vertexStart = mesh.MinIndex + mesh.VertexOffsetFromIndex;
-            uint vertexEnd = vertexStart + mesh.VertexCount;
-
-            mesh.VertexBuffer = VertexBuffers[mesh.VertexBufferIndex];
-            mesh.VerticesData = new GMDVertex[mesh.VertexCount];
-            Array.Copy(mesh.VertexBuffer.Vertices, (int)vertexStart, mesh.VerticesData, 0, (int)mesh.VertexCount);
-
             int index_ptr_min = mesh.TriangleListIndicesData.IndexOffset;
             int index_ptr_max = index_ptr_min + mesh.TriangleListIndicesData.IndexCount;
 
-            int index_offset = 0;
-
             List<ushort> range = Indices.ToList().GetRange(index_ptr_min, index_ptr_max - index_ptr_min);
-            int smallestIndex = range.IndexOf(range.Min());
+            uint smallestIndex = range.Min();
+
+            uint indexOffset;
 
             if (FileUsesRelativeIndices())
-                index_offset = 0;
+                indexOffset = 0;
             else
             {
                 if (FileUsesMinIndex())
                 {
-                    index_offset = (int)mesh.MinIndex;
+                    indexOffset = mesh.MinIndex;
 
-                    if (mesh.MinIndex > smallestIndex)
-                        index_offset = smallestIndex;
+                    if (mesh.MinIndex > smallestIndex) {
+                        // TODO the blender addon throws an error here
+                        indexOffset = smallestIndex;
+                    }
                 }
                 else
-                    index_offset = smallestIndex;
+                    indexOffset = smallestIndex;
             }
 
             List<ushort> indices = new List<ushort>();
 
+            int indexMin = 0x1_0000;
+            int indexMax = -1;
 
             for (int k = index_ptr_min; k < index_ptr_max; k++)
             {
                 ushort index = Indices[k];
-                int indexMin = index;
-                int indexMax = index;
+
 
                 if (index != 0xFFFF)
                 {
-                    indexMin = Mathf.Min(indexMin, index);
-                    indexMax = Mathf.Max(indexMax, index);
+                    indexMin = Math.Min(indexMin, index);
+                    indexMax = Math.Max(indexMax, index);
 
-                    index = (ushort)(index - mesh.MinIndex);
+                    index = (ushort)(index - indexOffset);
                 }
 
                 indices.Add(index);
             }
 
+            uint actualMinIndex = Math.Min(mesh.MinIndex, (uint)indexMin); // if indices_offset_by_min_index else indexMin. indices_offset_by_min_index is False in Kenzan
 
+            mesh.VertexBuffer = VertexBuffers[mesh.VertexBufferIndex].VertexBuffer;
+            mesh.VertexStart = actualMinIndex + mesh.VertexOffsetFromIndex;
+            mesh.VertexEnd = mesh.VertexStart + mesh.VertexCount;
             mesh.TriangleListIndices = indices.ToArray();
             Meshes[i] = mesh;
         }
@@ -239,76 +238,27 @@ public class GMDCustomImporter : ScriptedImporter
 
     private void ReadVertexBuffers()
     {
-        //Format 4 size 32 only for now
-        //TODO: TheTurboTurnip needs to make this not ASS
-        GMDVertex[] ReadBufferVertices(int format, int flags, int size, int perVertexSize)
-        {
-            int vertexCount = size / perVertexSize;
-            GMDVertex[] vertices = new GMDVertex[vertexCount];
-
-
-            for(int i = 0; i < vertexCount; i++)
-            {
-                GMDVertex vertex4 = new GMDVertex();
-                vertex4.Position = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
-
-                switch (perVertexSize)
-                {
-                    default:
-                        Debug.LogWarning($"Unknown format vertex stride {perVertexSize}");
-                        m_reader.Stream.Position += perVertexSize - 12;
-                        break;
-                    case 32:
-                        vertex4.BoneWeights = m_reader.ReadBytes(4);
-                        vertex4.BoneIndices = m_reader.ReadBytes(4);
-                        
-                        vertex4.Normal = new Vector4_32(m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte());
-                        vertex4.Tangent = new Vector4_32(m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte(), m_reader.ReadByte());
-                        vertex4.UV = new Vector2Half(Half.ToHalf(m_reader.ReadUInt16()), -Half.ToHalf(m_reader.ReadUInt16()));
-                        break;
-                }
-
-                vertices[i] = vertex4;
-            }
-
-            return vertices;
-        }
-
         m_reader.Stream.Seek(Header.VertexBufferChunk.Pointer, SeekMode.Start);
 
         VertexBuffers = new GMDVertexBufferLayout[Header.VertexBufferChunk.Count];
 
         for (int i = 0; i < Header.VertexBufferChunk.Count; i++)
         {
-            GMDVertexBufferLayout buffer = new GMDVertexBufferLayout();
-            buffer.Index = m_reader.ReadUInt32();
-            buffer.VertexCount = m_reader.ReadUInt32();
+            GMDVertexBufferLayout buffer = m_reader.Read<GMDVertexBufferLayout>();
+            // 4 bytes padding DONT USE SkipPadding HERE
+            m_reader.SkipAhead(4);
 
-            //c_cm_kiryu
-            //c_cm_x_ichiban_sode
-            if(Header.DetectedVersion == GMDVersion.DE)
-            {
-                buffer.Flags = m_reader.ReadInt32();
-                buffer.Format = m_reader.ReadInt32();
-            }
-            else
-            {
-                buffer.Format = m_reader.ReadInt32();
-                buffer.Flags = m_reader.ReadInt32();
-            }
+            // Read vertices, vertex data pointer is relative only in kenzan (which i dont care about rn)
+            uint vertexDataStartPos = (uint)(Header.VertexBytesChunk.Pointer + buffer.VertexData.Pointer);
 
-            buffer.VertexData = m_reader.Read<SizedPointer>();
-            buffer.BytesPerVertex = m_reader.ReadInt32();
-            m_reader.Stream.Position += 4;
+            GMDVertexFormat layout = GMDVertexFormat.Deserialize(buffer.VertexFormat);
 
-            //Read vertices, vertex data pointer is relative only in kenzan (which i dont care about rn)
-            uint vertexDataStartPos = (uint)(Header.VertexBufferPoolChunk.Pointer + buffer.VertexData.Pointer);
-
-            m_reader.Stream.RunInPosition(delegate
-            {
-                buffer.Vertices = ReadBufferVertices(buffer.Format, buffer.Flags, buffer.VertexData.Count, buffer.BytesPerVertex);
-            }, vertexDataStartPos, SeekMode.Start);
-            
+            m_reader.Stream.PushToPosition(vertexDataStartPos, SeekMode.Start);
+            var oldEndian = m_reader.Endianness;
+            m_reader.Endianness = Header.VertexEndianness;
+            buffer.VertexBuffer = layout.ExtractVertexBuffer(m_reader, (int)buffer.VertexCount, (int)buffer.BytesPerVertex);
+            m_reader.Stream.PopPosition();
+            m_reader.Endianness = oldEndian;
 
             VertexBuffers[i] = buffer;
         }
@@ -316,8 +266,8 @@ public class GMDCustomImporter : ScriptedImporter
 
     private void ReadVertices()
     {
-        m_reader.Stream.Seek(Header.VertexBufferPoolChunk.Pointer, SeekMode.Start);
-        Vertices = m_reader.ReadBytes(Header.VertexBufferPoolChunk.Count);
+        m_reader.Stream.Seek(Header.VertexBytesChunk.Pointer, SeekMode.Start);
+        Vertices = m_reader.ReadBytes(Header.VertexBytesChunk.Count);
     }
 
     private void ReadIndices()
@@ -414,21 +364,10 @@ public class GMDCustomImporter : ScriptedImporter
                 nodeMap[(uint)nodeInfo.ChildBoneID].transform.parent = nodeObject.transform;
         }
 
-        foreach(GMDMesh mesh in Meshes)
-        {
+        foreach (GMDMesh mesh in Meshes) {
             //Create the mesh based on the data we read.
-            Mesh meshInst = new Mesh();
+            Mesh meshInst = mesh.VertexBuffer.GenerateMesh(mesh.TriangleListIndices, mesh.VertexStart, mesh.VertexEnd);
             meshInst.name = mesh.Index.ToString() + "_mesh";
-            meshInst.SetVertices(mesh.VerticesData.Select(x => new Vector3(x.Position.x, x.Position.y, x.Position.z)).ToArray());
-            meshInst.SetNormals(mesh.VerticesData.Select(x => (Vector3)x.Normal).ToArray());
-            meshInst.SetUVs(0, (mesh.VerticesData.Select(x => x.UV)).ToArray());
-
-            //Convert the ushort indices to int since that's Unity's format.
-            int[] intIndices = mesh.TriangleListIndices.Select(x => (int)x).ToArray();
-            //Meshes are triangles
-            meshInst.SetIndices(intIndices, MeshTopology.Triangles, 0);
-            //Finalize the mesh
-            meshInst.RecalculateNormals();
 
             //A basic mesh filter and renderer for now.
             GameObject meshObj = new GameObject();
@@ -442,6 +381,7 @@ public class GMDCustomImporter : ScriptedImporter
 
             //Add created meshes to the imported asset
             m_ctx.AddObjectToAsset(meshInst.name, meshInst);
+            m_ctx.AddObjectToAsset(meshInst.name, meshObj);
         }
     }
 }

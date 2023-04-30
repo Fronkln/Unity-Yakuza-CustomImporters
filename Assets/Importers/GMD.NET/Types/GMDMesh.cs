@@ -22,9 +22,10 @@ public class GMDMesh
     public IndicesStruct NoResetStripIndicesData;
     public IndicesStruct ResetStripIndicesData;
 
-    //Not part of the structure, parsed by reading algorithm
-    public GMDVertexBufferLayout VertexBuffer;
-    public GMDVertex[] VerticesData;
-
+    // Not part of the structure, parsed by reading algorithm
+    public GMDVertexBuffer VertexBuffer;
+    public uint VertexStart; // This mesh uses the vertices [VertexStart, VertexEnd) from VertexBuffer. The TriangleListIndices are relative to this range.
+    public uint VertexEnd;
     public ushort[] TriangleListIndices;
+
 }
