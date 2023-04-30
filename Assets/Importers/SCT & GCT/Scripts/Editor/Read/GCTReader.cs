@@ -73,8 +73,8 @@ public class GCTReader
         for(int i = 0; i < m_header.Shapes.Length; i++)
         {
             GCTShapeHeader header = new GCTShapeHeader();
-            header.Flags = m_reader.ReadInt32();
-            header.Attributes = m_reader.ReadInt32();
+            header.Flags = m_reader.ReadUInt32();
+            header.Attributes = m_reader.ReadUInt32();
 
             GCTShape readShape = null;
             GCTShapeType shapeType = header.GetShapeType();

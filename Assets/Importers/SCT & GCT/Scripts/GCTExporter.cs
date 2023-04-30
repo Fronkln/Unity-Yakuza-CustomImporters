@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 [ExecuteInEditMode]
@@ -32,14 +33,28 @@ public class GCTExporter : MonoBehaviour
         m_generatedHeader = new GCTHeader();
         m_vertices = new List<Vector3>();
 
-        transform.localScale = new Vector3(1, 1, 1);
+       // transform.localScale = new Vector3(1, 1, 1);
 
-        yield return new WaitForSecondsRealtime(0.1f);
+        //yield return new WaitForSecondsRealtime(0.1f);
 
         GCTExportData[] exportingShapes = gameObject.GetComponentsInChildren<GCTExportData>().Where(x => x.gameObject.activeInHierarchy).ToArray();
+        List<GCTExportOutput> outputData = new List<GCTExportOutput>();
+
+        int shapeIdx = 0;
+
+        for (int i = 0; i < exportingShapes.Length; i++)
+        {
+            outputData.AddRange(exportingShapes[i].Export(shapeIdx));
+
+            if (exportingShapes[i] is GCTExportDataUnityBox)
+                shapeIdx += 6;
+            else
+                shapeIdx++;
+        }
 
         //Vertices equal to zero = assume didnt export successfully and filter out.
-        GCTExportOutput[] outputData = exportingShapes.Select(x => x.Export()).Where(x => x.Vertices.Length > 0).ToArray();
+        outputData = outputData.Where(x => x.Vertices.Length > 0).ToList();
+
         GCTShape[] shapes = outputData.Select(x => ConvertToShape(x)).Where(x => x != null).ToArray();
 
         m_generatedHeader.Vertices = m_vertices.ToArray();
@@ -54,7 +69,7 @@ public class GCTExporter : MonoBehaviour
 
         GCTWriter.Write(m_generatedHeader, IsOEGct, OutputPath);
 
-        transform.localScale = new Vector3(-1, 1, 1);
+       // transform.localScale = new Vector3(-1, 1, 1);
 
 
         //Clear

@@ -10,6 +10,7 @@ using Yarhl.IO;
 using System.IO;
 using System.Linq;
 using Unity.VisualScripting;
+using System.Security.Authentication.ExtendedProtection;
 
 [ScriptedImporter(1, "gct")]
 public class GCTCustomImporter : ScriptedImporter
@@ -170,8 +171,14 @@ public class GCTCustomImporter : ScriptedImporter
             GCTExportData exportComponent = primitiveObj.AddComponent<GCTExportData>();
             exportComponent.AABox = generatedAABox;
             exportComponent.Mesh = mesh;
+
             exportComponent.Type = primitive.Header.GetShapeType();
-            exportComponent.NodeHeader = primitive.Header;
+            exportComponent.EdgeFlags = (ShapeEdgeFlags)primitive.Header.GetEdgeFlags();
+            exportComponent.NodeID = primitive.Header.GetNodeID();
+
+            exportComponent.Material = primitive.Header.GetMaterialType();
+            exportComponent.Control = primitive.Header.GetControl();
+
             exportComponent.AABoxHitFilter = boundingBox.HitFilter;
 
             if (index < header.NodeAABoxes.Length)
