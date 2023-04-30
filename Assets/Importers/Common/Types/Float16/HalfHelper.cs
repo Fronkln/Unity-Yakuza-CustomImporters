@@ -156,6 +156,10 @@ namespace System
             return shiftTable;
         }
 
+        public static unsafe float HalfBitsToSingle(ushort halfBits) {
+            uint result = mantissaTable[offsetTable[halfBits >> 10] + (halfBits & 0x3ff)] + exponentTable[halfBits >> 10];
+            return *((float*)&result);
+        }
         public static unsafe float HalfToSingle(Half half)
         {
             uint result = mantissaTable[offsetTable[half.value >> 10] + (half.value & 0x3ff)] + exponentTable[half.value >> 10];

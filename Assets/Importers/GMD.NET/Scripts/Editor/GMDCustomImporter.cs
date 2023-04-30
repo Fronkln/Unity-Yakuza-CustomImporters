@@ -78,7 +78,7 @@ public class GMDCustomImporter : ScriptedImporter
         Header.MaterialParamsChunk = m_reader.Read<SizedPointer>();
         Header.MatrixListChunk = m_reader.Read<SizedPointer>();
         Header.VertexBufferChunk = m_reader.Read<SizedPointer>();
-        Header.VertexBufferPoolChunk = m_reader.Read<SizedPointer>();
+        Header.VertexBytesChunk = m_reader.Read<SizedPointer>();
         Header.MaterialNameChunk = m_reader.Read<SizedPointer>();
         Header.ShaderNameChunk = m_reader.Read<SizedPointer>();
         Header.NodeNameChunk = m_reader.Read<SizedPointer>();
@@ -225,13 +225,10 @@ public class GMDCustomImporter : ScriptedImporter
                     index = (ushort)(index - mesh.MinIndex);
                 }
 
-                if(mesh.Index == 0)
-                    Debug.Log(index);
-
                 indices.Add(index);
             }
 
-
+            mesh.VertexBuffer = VertexBuffers[mesh.VertexBufferIndex].VertexBuffer;
             mesh.TriangleListIndices = indices.ToArray();
             Meshes[i] = mesh;
         }
@@ -245,18 +242,25 @@ public class GMDCustomImporter : ScriptedImporter
 
         for (int i = 0; i < Header.VertexBufferChunk.Count; i++)
         {
-            var buffer = m_reader.Read<GMDVertexBufferLayout>();
-            // 4 bytes padding
-            m_reader.Stream.Position += 4;
+            long initialPos = m_reader.Stream.AbsolutePosition;
+            Debug.Log(m_reader.Stream.AbsolutePosition);
+            GMDVertexBufferLayout buffer = m_reader.Read<GMDVertexBufferLayout>();
+            Debug.Log(m_reader.Stream.AbsolutePosition);
+            // 4 bytes padding DONT USE SkipPadding HERE
+            m_reader.SkipAhead(4);
 
-            ////Read vertices, vertex data pointer is relative only in kenzan (which i dont care about rn)
-            //uint vertexDataStartPos = (uint)(Header.VertexBufferPoolChunk.Pointer + buffer.VertexData.Pointer);
+            // Read vertices, vertex data pointer is relative only in kenzan (which i dont care about rn)
+            uint vertexDataStartPos = (uint)(Header.VertexBytesChunk.Pointer + buffer.VertexData.Pointer);
 
-            //m_reader.Stream.RunInPosition(delegate
-            //{
-            //    buffer.Vertices = ReadBufferVertices(buffer.Format, buffer.Flags, buffer.VertexData.Count, buffer.BytesPerVertex);
-            //}, vertexDataStartPos, SeekMode.Start);
-            
+            GMDVertexFormat layout = GMDVertexFormat.Deserialize(buffer.VertexFormat);
+
+            m_reader.Stream.PushToPosition(vertexDataStartPos, SeekMode.Start);
+            var oldEndian = m_reader.Endianness;
+            m_reader.Endianness = Header.VertexEndianness;
+            buffer.VertexBuffer = layout.ExtractVertexBuffer(m_reader, (int)buffer.VertexCount, (int)buffer.BytesPerVertex);
+            m_reader.Stream.PopPosition();
+            m_reader.Endianness = oldEndian;
+
 
             VertexBuffers[i] = buffer;
         }
@@ -264,8 +268,8 @@ public class GMDCustomImporter : ScriptedImporter
 
     private void ReadVertices()
     {
-        m_reader.Stream.Seek(Header.VertexBufferPoolChunk.Pointer, SeekMode.Start);
-        Vertices = m_reader.ReadBytes(Header.VertexBufferPoolChunk.Count);
+        m_reader.Stream.Seek(Header.VertexBytesChunk.Pointer, SeekMode.Start);
+        Vertices = m_reader.ReadBytes(Header.VertexBytesChunk.Count);
     }
 
     private void ReadIndices()
@@ -362,32 +366,22 @@ public class GMDCustomImporter : ScriptedImporter
                 nodeMap[(uint)nodeInfo.ChildBoneID].transform.parent = nodeObject.transform;
         }
 
-        //foreach(GMDMesh mesh in Meshes)
-        //{
-        //    //Create the mesh based on the data we read.
-        //    Mesh meshInst = new Mesh();
-        //    meshInst.name = mesh.Index.ToString() + "_mesh";
-        //    meshInst.SetVertices(mesh.VerticesData.Select(x => new Vector3(x.Position.x, x.Position.y, x.Position.z)).ToArray());
-        //    meshInst.SetNormals(mesh.VerticesData.Select(x => (Vector3)x.Normal).ToArray());
-        //    meshInst.SetUVs(0, (mesh.VerticesData.Select(x => x.UV)).ToArray());
+        foreach (GMDMesh mesh in Meshes) {
+            //Create the mesh based on the data we read.
+            Mesh meshInst = mesh.VertexBuffer.GenerateMesh(mesh.TriangleListIndices);
+            meshInst.name = mesh.Index.ToString() + "_mesh";
 
-        //    //Convert the ushort indices to int since that's Unity's format.
-        //    int[] intIndices = mesh.TriangleListIndices.Select(x => (int)x).ToArray();
-        //    //Meshes are triangles
-        //    meshInst.SetIndices(intIndices, MeshTopology.Triangles, 0);
-        //    //Finalize the mesh
-        //    meshInst.RecalculateNormals();
+            //A basic mesh filter and renderer for now.
+            GameObject meshObj = new GameObject();
+            MeshFilter filter = meshObj.AddComponent<MeshFilter>();
+            meshObj.gameObject.AddComponent<MeshRenderer>();
+            meshObj.transform.parent = nodeMap[mesh.NodeIndex].transform;
+            meshObj.name = mesh.Index.ToString();
+            filter.mesh = meshInst;
 
-        //    //A basic mesh filter and renderer for now.
-        //    GameObject meshObj = new GameObject();
-        //    MeshFilter filter = meshObj.AddComponent<MeshFilter>();
-        //    meshObj.gameObject.AddComponent<MeshRenderer>();
-        //    meshObj.transform.parent = nodeMap[mesh.NodeIndex].transform;
-        //    meshObj.name = mesh.Index.ToString();
-        //    filter.mesh = meshInst;
-
-        //    //Add created meshes to the imported asset
-        //    m_ctx.AddObjectToAsset(meshInst.name, meshInst);
-        //}
+            //Add created meshes to the imported asset
+            m_ctx.AddObjectToAsset(meshInst.name, meshInst);
+            m_ctx.AddObjectToAsset(meshInst.name, meshObj);
+        }
     }
 }

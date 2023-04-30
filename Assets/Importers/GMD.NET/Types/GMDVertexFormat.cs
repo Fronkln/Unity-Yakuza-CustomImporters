@@ -3,6 +3,11 @@
 using u8 = System.Byte;
 using u32 = System.UInt32;
 using u64 = System.UInt64;
+using UnityEngine;
+using Yarhl.IO;
+using System.Collections.Generic;
+
+#nullable enable
 
 public class GMDVertexFormat {
     public VecStorage Pos;
@@ -15,6 +20,8 @@ public class GMDVertexFormat {
     public VecStorage? Col1;
     public VecStorage[] UVs;
 
+    public int? PrimaryUVIndex;
+
     public GMDVertexFormat(
         VecStorage pos,
         VecStorage? weight,
@@ -26,6 +33,9 @@ public class GMDVertexFormat {
         VecStorage? col1,
         VecStorage[] uvs
     ) {
+        if (unk != null)
+            throw new System.ArgumentException("We don't know how to handle meshes with the unk vertex attribute set");
+
         Pos = pos;
         Weight = weight;
         Bone = bone;
@@ -35,6 +45,86 @@ public class GMDVertexFormat {
         Col0 = col0;
         Col1 = col1;
         UVs = uvs;
+
+        // Find the "primary UV index" - the first UV with 2 components.
+        // This will be used as UV0 in Unity, in an attempt to get textures to look right by default.
+        PrimaryUVIndex = null;
+        for(int i = 0; i < UVs.Length; i++) {
+            if (UVs[i].NumComponents == 2) {
+                PrimaryUVIndex = i;
+                break;
+            }
+        }
+    }
+
+    public GMDVertexBuffer ExtractVertexBuffer(DataReader reader, int numVertices, int vertexSize) {
+        // Save the start of the position channel (i.e. the start of the vertices, which we assume this reader has been set to)
+        reader.Stream.PushCurrentPosition();
+        // Pull data out, moving the reader
+        float[,] positions = Pos.ExtractDataAsFloats(reader, numVertices, vertexSize);
+        // Go back to the start of the position channel
+        reader.Stream.PopPosition();
+        // Go forward to the start of the next channel
+        reader.SkipAhead(Pos.WidthBytes);
+
+        // Weight
+        reader.Stream.PushCurrentPosition();
+        float[,]? weights = Weight?.ExtractDataAsFloats(reader, numVertices, vertexSize);
+        reader.Stream.PopPosition();
+        reader.SkipAhead(Weight?.WidthBytes ?? 0);
+
+        // Bones
+        reader.Stream.PushCurrentPosition();
+        float[,]? bones = Bone?.ExtractDataAsFloats(reader, numVertices, vertexSize);
+        reader.Stream.PopPosition();
+        reader.SkipAhead(Bone?.WidthBytes ?? 0);
+
+        // Normal
+        reader.Stream.PushCurrentPosition();
+        float[,]? normals = Normal?.ExtractDataAsFloats(reader, numVertices, vertexSize);
+        reader.Stream.PopPosition();
+        reader.SkipAhead(Normal?.WidthBytes ?? 0);
+
+        // Tangent
+        reader.Stream.PushCurrentPosition();
+        float[,]? tangents = Tangent?.ExtractDataAsFloats(reader, numVertices, vertexSize);
+        reader.Stream.PopPosition();
+        reader.SkipAhead(Tangent?.WidthBytes ?? 0);
+
+        // NO UNK
+
+        // Col0
+        reader.Stream.PushCurrentPosition();
+        float[,]? col0 = Col0?.ExtractDataAsFloats(reader, numVertices, vertexSize);
+        reader.Stream.PopPosition();
+        reader.SkipAhead(Col0?.WidthBytes ?? 0);
+
+        // Col1
+        reader.Stream.PushCurrentPosition();
+        float[,]? col1 = Col1?.ExtractDataAsFloats(reader, numVertices, vertexSize);
+        reader.Stream.PopPosition();
+        reader.SkipAhead(Col1?.WidthBytes ?? 0);
+
+        // UVs
+        var uvs = new List<float[,]>();
+        foreach (VecStorage uvStorage in UVs) {
+            reader.Stream.PushCurrentPosition();
+            uvs.Add(uvStorage.ExtractDataAsFloats(reader, numVertices, vertexSize));
+            reader.Stream.PopPosition();
+            reader.SkipAhead(uvStorage.WidthBytes);
+        }
+
+        return new GMDVertexBuffer(
+            format: this,
+            positions,
+            weights,
+            bones,
+            normals,
+            tangents,
+            col0,
+            col1,
+            uvs
+        );
     }
 
     // The bottom 32 bits are for non-UV fields, and don't have a regular structure
@@ -68,7 +158,7 @@ public class GMDVertexFormat {
         new Bits64(32 + (7*4), 4),
     };
 
-    public GMDVertexFormat Deserialize(u64 layoutBits) {
+    public static GMDVertexFormat Deserialize(u64 layoutBits) {
         bool hasWeights = FMT_WEIGHT_EN.ExtractFrom(layoutBits) != 0;
         bool hasBones = FMT_BONES_EN.ExtractFrom(layoutBits) != 0;
         bool hasNormal = FMT_NORMAL_EN.ExtractFrom(layoutBits) != 0;
@@ -156,6 +246,9 @@ public class GMDVertexFormat {
                     }
                 }
                 currUv++;
+
+                if (currUv >= numUVs)
+                    break;
             }
         }
 
@@ -171,7 +264,7 @@ public class GMDVertexFormat {
             uvs: uvStorages
         );
     }
-    private VecStorage ExtractAttributeFormat(u64 layoutBits, Bits64 bits, int numComponentsIfFloat32, VertexAttributeFormat formatIfByte) {
+    private static VecStorage ExtractAttributeFormat(u64 layoutBits, Bits64 bits, int numComponentsIfFloat32, VertexAttributeFormat formatIfByte) {
         switch (bits.ExtractFrom(layoutBits)) {
             case 0:
                 return new VecStorage(VertexAttributeFormat.Float32, numComponentsIfFloat32);
