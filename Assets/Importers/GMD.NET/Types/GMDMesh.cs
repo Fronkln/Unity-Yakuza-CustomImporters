@@ -22,9 +22,9 @@ public class GMDMesh
     public IndicesStruct NoResetStripIndicesData;
     public IndicesStruct ResetStripIndicesData;
 
-    //Not part of the structure, parsed by reading algorithm
-    public GMDVertexBufferLayout VertexBuffer;
-    public GMDVertex[] VerticesData;
+    ////Not part of the structure, parsed by reading algorithm
+    //public GMDVertexBufferLayout VertexBuffer;
+    //public GMDVertex[] VerticesData;
 
     public ushort[] TriangleListIndices;
 }
