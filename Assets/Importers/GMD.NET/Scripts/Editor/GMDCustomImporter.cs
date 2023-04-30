@@ -177,58 +177,57 @@ public class GMDCustomImporter : ScriptedImporter
             mesh.VertexOffsetFromIndex = m_reader.ReadUInt32();
             mesh.MinIndex = m_reader.ReadUInt32();
 
-            //Vertex
-            uint vertexStart = mesh.MinIndex + mesh.VertexOffsetFromIndex;
-            uint vertexEnd = vertexStart + mesh.VertexCount;
-
-            //mesh.VertexBuffer = VertexBuffers[mesh.VertexBufferIndex];
-            //mesh.VerticesData = new GMDVertex[mesh.VertexCount];
-            //Array.Copy(mesh.VertexBuffer.Vertices, (int)vertexStart, mesh.VerticesData, 0, (int)mesh.VertexCount);
-
             int index_ptr_min = mesh.TriangleListIndicesData.IndexOffset;
             int index_ptr_max = index_ptr_min + mesh.TriangleListIndicesData.IndexCount;
 
-            int index_offset = 0;
-
             List<ushort> range = Indices.ToList().GetRange(index_ptr_min, index_ptr_max - index_ptr_min);
-            int smallestIndex = range.IndexOf(range.Min());
+            uint smallestIndex = range.Min();
+
+            uint indexOffset;
 
             if (FileUsesRelativeIndices())
-                index_offset = 0;
+                indexOffset = 0;
             else
             {
                 if (FileUsesMinIndex())
                 {
-                    index_offset = (int)mesh.MinIndex;
+                    indexOffset = mesh.MinIndex;
 
-                    if (mesh.MinIndex > smallestIndex)
-                        index_offset = smallestIndex;
+                    if (mesh.MinIndex > smallestIndex) {
+                        // TODO the blender addon throws an error here
+                        indexOffset = smallestIndex;
+                    }
                 }
                 else
-                    index_offset = smallestIndex;
+                    indexOffset = smallestIndex;
             }
 
             List<ushort> indices = new List<ushort>();
 
+            int indexMin = 0x1_0000;
+            int indexMax = -1;
 
             for (int k = index_ptr_min; k < index_ptr_max; k++)
             {
                 ushort index = Indices[k];
-                int indexMin = index;
-                int indexMax = index;
+
 
                 if (index != 0xFFFF)
                 {
-                    indexMin = Mathf.Min(indexMin, index);
-                    indexMax = Mathf.Max(indexMax, index);
+                    indexMin = Math.Min(indexMin, index);
+                    indexMax = Math.Max(indexMax, index);
 
-                    index = (ushort)(index - mesh.MinIndex);
+                    index = (ushort)(index - indexOffset);
                 }
 
                 indices.Add(index);
             }
 
+            uint actualMinIndex = Math.Min(mesh.MinIndex, (uint)indexMin); // if indices_offset_by_min_index else indexMin. indices_offset_by_min_index is False in Kenzan
+
             mesh.VertexBuffer = VertexBuffers[mesh.VertexBufferIndex].VertexBuffer;
+            mesh.VertexStart = actualMinIndex + mesh.VertexOffsetFromIndex;
+            mesh.VertexEnd = mesh.VertexStart + mesh.VertexCount;
             mesh.TriangleListIndices = indices.ToArray();
             Meshes[i] = mesh;
         }
@@ -242,10 +241,7 @@ public class GMDCustomImporter : ScriptedImporter
 
         for (int i = 0; i < Header.VertexBufferChunk.Count; i++)
         {
-            long initialPos = m_reader.Stream.AbsolutePosition;
-            Debug.Log(m_reader.Stream.AbsolutePosition);
             GMDVertexBufferLayout buffer = m_reader.Read<GMDVertexBufferLayout>();
-            Debug.Log(m_reader.Stream.AbsolutePosition);
             // 4 bytes padding DONT USE SkipPadding HERE
             m_reader.SkipAhead(4);
 
@@ -260,7 +256,6 @@ public class GMDCustomImporter : ScriptedImporter
             buffer.VertexBuffer = layout.ExtractVertexBuffer(m_reader, (int)buffer.VertexCount, (int)buffer.BytesPerVertex);
             m_reader.Stream.PopPosition();
             m_reader.Endianness = oldEndian;
-
 
             VertexBuffers[i] = buffer;
         }
@@ -368,7 +363,7 @@ public class GMDCustomImporter : ScriptedImporter
 
         foreach (GMDMesh mesh in Meshes) {
             //Create the mesh based on the data we read.
-            Mesh meshInst = mesh.VertexBuffer.GenerateMesh(mesh.TriangleListIndices);
+            Mesh meshInst = mesh.VertexBuffer.GenerateMesh(mesh.TriangleListIndices, mesh.VertexStart, mesh.VertexEnd);
             meshInst.name = mesh.Index.ToString() + "_mesh";
 
             //A basic mesh filter and renderer for now.
