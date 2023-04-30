@@ -5,6 +5,7 @@ using UnityEngine;
 public class VisualizeVertex : MonoBehaviour
 {
     public MeshFilter Mf;
+    public float Scale = 0.01f;
 
     public void OnDrawGizmos()
     {
@@ -13,7 +14,7 @@ public class VisualizeVertex : MonoBehaviour
 
         foreach (Vector3 vec in Mf.sharedMesh.vertices)
         {
-            Gizmos.DrawCube(Mf.transform.position + vec, new Vector3(0.01f, 0.01f, 0.01f));
+            Gizmos.DrawCube(Mf.transform.position + vec, new Vector3(Scale, Scale, Scale));
         }
     }
 }

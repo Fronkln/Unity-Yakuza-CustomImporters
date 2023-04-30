@@ -10,6 +10,9 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using Codice.CM.Common;
+using UnityEditor;
+using UnityEngine.UIElements;
 
 [ScriptedImporter(1, "gmd")]
 public class GMDCustomImporter : ScriptedImporter
@@ -296,7 +299,7 @@ public class GMDCustomImporter : ScriptedImporter
 
     private EndiannessMode DetermineFileEndian()
     {
-        if (Header.FileEndian == 2)
+        if (Header.FileEndian == 2 || Header.FileEndian == 1)
             return EndiannessMode.BigEndian;
         else
             return EndiannessMode.LittleEndian;
@@ -369,7 +372,9 @@ public class GMDCustomImporter : ScriptedImporter
             //A basic mesh filter and renderer for now.
             GameObject meshObj = new GameObject();
             MeshFilter filter = meshObj.AddComponent<MeshFilter>();
-            meshObj.gameObject.AddComponent<MeshRenderer>();
+            MeshRenderer mr = meshObj.gameObject.AddComponent<MeshRenderer>();
+            mr.material = AssetDatabase.LoadAssetAtPath<Material>("Assets/TestMaterial.mat");
+
             meshObj.transform.parent = nodeMap[mesh.NodeIndex].transform;
             meshObj.name = mesh.Index.ToString();
             filter.mesh = meshInst;
