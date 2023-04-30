@@ -117,10 +117,10 @@ public class GCTExportData : MonoBehaviour
         Bits32 nodeIDBits = new Bits32(22, 6);
 
         uint flag = 0;
-        flag |= shapeTypeBits.WriteInto(flag, (uint)Type);
-        flag |= shapeIDBits.WriteInto(flag, (uint)shapeID);
-        flag |= nodeIDBits.WriteInto(flag, (uint)NodeID);
-        flag |= edgeBits.WriteInto(flag, (byte)EdgeFlags);
+        flag = shapeTypeBits.WriteInto(flag, (uint)Type);
+        flag = shapeIDBits.WriteInto(flag, (uint)shapeID);
+        flag = nodeIDBits.WriteInto(flag, (uint)NodeID);
+        flag = edgeBits.WriteInto(flag, (byte)EdgeFlags);
 
         return flag;
     }

@@ -4,10 +4,10 @@ using UnityEditor.AssetImporters;
 #else
 using UnityEditor.Experimental.AssetImporters;
 #endif
+using System.Collections.Generic;
 using System.IO;
 using Yarhl.IO;
 using System.Text;
-using System.Xml.Linq;
 
 [ScriptedImporter(1, "sct")]
 public class SCTCustomImporter : ScriptedImporter
@@ -15,6 +15,7 @@ public class SCTCustomImporter : ScriptedImporter
     public bool GenerateExportData = true;
 
     private AssetImportContext m_ctx;
+    private SCTHeader m_header = null;
     private DataReader m_reader = null;
     private DataStream m_readStream = null;
 
@@ -43,8 +44,8 @@ public class SCTCustomImporter : ScriptedImporter
         {
             Debug.Log("OOE SCT");
 
-            SCTHeader sctData = SCTReader.Read(m_reader);
-            createdCollisionObject = Process(sctData);
+            m_header = SCTReader.Read(m_reader);
+            createdCollisionObject = Process(m_header);
         }
 
         if (createdCollisionObject != null)
@@ -59,20 +60,36 @@ public class SCTCustomImporter : ScriptedImporter
     {
         GameObject stageColl = new GameObject();
 
-        //Visualize vertices (Debug)
-        GameObject debugMeshObj = new GameObject();
-        MeshFilter debugMeshFilter = debugMeshObj.AddComponent<MeshFilter>();
-        debugMeshFilter.sharedMesh = DebugCreateVerticesMesh(sctData);
-
-        VisualizeVertex visualizer = debugMeshObj.AddComponent<VisualizeVertex>();
-        visualizer.Mf = debugMeshFilter;
-        visualizer.Scale = 0.1f;
-
-        debugMeshObj.transform.parent = stageColl.transform;
-
-        m_ctx.AddObjectToAsset("debug_test_vertices_mesh", debugMeshFilter.sharedMesh);
+        for(int i = 0; i < sctData.Shapes.Length; i++)
+        {
+            GenerateShape(sctData.Shapes[i], i).transform.parent = stageColl.transform;
+        }
 
         return stageColl;
+    }
+
+    private GameObject GenerateShape(SCTShape sctShape, int index)
+    {
+        GameObject shape = new GameObject("Shape_" + index);
+
+        Mesh shapeMesh = new Mesh();
+        shapeMesh.name = "Shape_" + index + "_Mesh";
+
+        List<Vector3> meshVertices = new List<Vector3>();
+
+        foreach (ushort idx in sctShape.Indices)
+            meshVertices.Add(m_header.Vertices[idx]);
+
+        shapeMesh.SetVertices(meshVertices);
+        shapeMesh.SetIndices(new int[] { 0, 2, 1, 3}, MeshTopology.Quads, 0);
+        shapeMesh.RecalculateBounds();
+
+        MeshCollider coll = shape.AddComponent<MeshCollider>();
+        coll.sharedMesh = shapeMesh;
+
+        m_ctx.AddObjectToAsset(shapeMesh.name, shapeMesh);
+
+        return shape;
     }
 
     //Creates a mesh that only holds vertex information (only for debugging pruposes)

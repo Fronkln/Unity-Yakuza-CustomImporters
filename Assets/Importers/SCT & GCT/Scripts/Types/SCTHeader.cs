@@ -7,9 +7,8 @@ public class SCTHeader
     public int Flags;
     //int Padding
 
-    public uint HitFilter;
-    public uint NodeDepth;
     public Bounds Bounds;
 
+    public SCTShape[] Shapes;
     public Vector3[] Vertices;
 }
