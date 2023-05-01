@@ -19,9 +19,9 @@ public enum NodeType : int
 
 public class GMDNode
 {
-    public int BoneID;
-    public int ChildBoneID;
-    public int ParentBoneID;
+    public int NodeID;
+    public int ParentOfNodeID;
+    public int SiblingOfNodeID;
     public int ObjectIndex; //-1 if not an object
     public int MatrixIndex; //Still unclear, but this is probably a matrix index. Usually == index.
     public NodeStackOp StackOp;
