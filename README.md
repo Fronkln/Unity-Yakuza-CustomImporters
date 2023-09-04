@@ -3,9 +3,9 @@ ScriptedImporter for PAC, SCT, GCT and GMD!
 
 
 Characters
-<b>
+<br>
 ![Image](https://github.com/Fronkln/Unity-Yakuza-CustomImporters/blob/main/preview.PNG)
-<b>
+<rb>
 st_serena
-<b>
+<br>
 ![Image](https://github.com/Fronkln/Unity-Yakuza-CustomImporters/blob/main/preview2.PNG)
