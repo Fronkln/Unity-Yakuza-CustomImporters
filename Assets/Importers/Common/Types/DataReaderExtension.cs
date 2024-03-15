@@ -1,4 +1,5 @@
-﻿using Yarhl.IO;
+﻿using UnityEngine;
+using Yarhl.IO;
 
 public static class DataReaderExtension {
     /// <summary>
@@ -12,5 +13,13 @@ public static class DataReaderExtension {
     /// <param name="bytes"></param>
     public static void SkipAhead(this DataReader reader, int bytes) {
         reader.Stream.Seek(bytes, SeekMode.Current);
+    }
+
+    /// <summary>
+    /// Read Vector3
+    /// </summary>
+    public static Vector3 ReadVector3(this DataReader reader)
+    {
+        return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
     }
 }
