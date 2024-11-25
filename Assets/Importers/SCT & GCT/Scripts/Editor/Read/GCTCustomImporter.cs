@@ -9,8 +9,6 @@ using UnityEditor.Experimental.AssetImporters;
 using Yarhl.IO;
 using System.IO;
 using System.Linq;
-using Unity.VisualScripting;
-using System.Security.Authentication.ExtendedProtection;
 
 [ScriptedImporter(1, "gct")]
 public class GCTCustomImporter : ScriptedImporter

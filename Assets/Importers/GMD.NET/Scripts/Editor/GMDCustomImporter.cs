@@ -10,9 +10,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using Codice.CM.Common;
 using UnityEditor;
-using UnityEngine.UIElements;
 
 [ScriptedImporter(1, "gmd")]
 public class GMDCustomImporter : ScriptedImporter

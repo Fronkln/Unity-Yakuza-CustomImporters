@@ -1,5 +1,3 @@
-using Unity.VisualScripting.Antlr3.Runtime;
-
 [System.Serializable]
 public struct GCTShapeHeader
 {
