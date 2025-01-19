@@ -68,7 +68,7 @@ public class SCTReader
 
         m_header.Shapes = new SCTShape[m_shapeCount];
 
-        for(int i = 0; i < m_header.Shapes.Length; i++)
+        for (int i = 0; i < m_header.Shapes.Length; i++)
         {
             SCTShape shape = new SCTShape();
             shape.Normal = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());

@@ -8,5 +8,5 @@ public enum GCTShapeType : int
     Triangle = 1,
     Quad = 2,
     AABox = 3,
-    ORBox = 4
+    ORBox = 4,
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
+//To match with GMD, GCT should be negative scale
 [ExecuteInEditMode]
 public class GCTExporter : MonoBehaviour
 {
@@ -43,12 +44,16 @@ public class GCTExporter : MonoBehaviour
 
         for (int i = 0; i < exportingShapes.Length; i++)
         {
-            outputData.AddRange(exportingShapes[i].Export(shapeIdx));
+            GCTExportOutput[] outputShapes = exportingShapes[i].Export(shapeIdx);
+            outputData.AddRange(outputShapes);
+            shapeIdx += outputShapes.Length;
 
+            /*
             if (exportingShapes[i] is GCTExportDataUnityBox)
                 shapeIdx += 6;
             else
                 shapeIdx++;
+            */
         }
 
         //Vertices equal to zero = assume didnt export successfully and filter out.

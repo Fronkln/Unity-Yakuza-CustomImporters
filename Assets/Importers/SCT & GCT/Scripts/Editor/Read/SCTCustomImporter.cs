@@ -13,6 +13,10 @@ using System.Text;
 public class SCTCustomImporter : ScriptedImporter
 {
     public bool GenerateExportData = true;
+    public bool DebugVertex;
+    public bool DebugShapeVertex;
+    public bool ImportQuad;
+    public bool ImportTriangle;
 
     private AssetImportContext m_ctx;
     private SCTHeader m_header = null;
@@ -33,7 +37,7 @@ public class SCTCustomImporter : ScriptedImporter
         GameObject createdCollisionObject = null;
 
         //Modern SCT, Yakuza 5 and above
-        if(magic == "GCTD")
+        if (magic == "GCTD")
         {
             Debug.Log("OE/DE SCT");
 
@@ -60,13 +64,32 @@ public class SCTCustomImporter : ScriptedImporter
     {
         GameObject stageColl = new GameObject();
 
-        for(int i = 0; i < sctData.Shapes.Length; i++)
+        for (int i = 0; i < sctData.Shapes.Length; i++)
         {
             GenerateShape(sctData.Shapes[i], i).transform.parent = stageColl.transform;
         }
 
+        if(DebugVertex)
+        {
+            GameObject holder = new GameObject("Vertices");
+            holder.transform.parent = stageColl.transform;
+
+            for(int i = 0; i < sctData.Vertices.Length; i++)
+            {
+                Vector3 vtx = sctData.Vertices[i];
+                var obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                obj.name = i.ToString();
+                obj.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                obj.transform.parent = holder.transform;
+                obj.transform.position = vtx;
+            }
+
+        }
+
         return stageColl;
     }
+
+    public static bool debugVtx = true;
 
     private GameObject GenerateShape(SCTShape sctShape, int index)
     {
@@ -76,16 +99,51 @@ public class SCTCustomImporter : ScriptedImporter
         shapeMesh.name = "Shape_" + index + "_Mesh";
 
         List<Vector3> meshVertices = new List<Vector3>();
+        
+        if(sctShape.Flags == 0 || (sctShape.Flags & 32) != 0)
+        {
+            if (ImportTriangle)
+            {
+                //Triangle
+                meshVertices.Add(m_header.Vertices[sctShape.Indices[0]]);
+                meshVertices.Add(m_header.Vertices[sctShape.Indices[1]]);
+                meshVertices.Add(m_header.Vertices[sctShape.Indices[3]]);
 
-        foreach (ushort idx in sctShape.Indices)
-            meshVertices.Add(m_header.Vertices[idx]);
+                shapeMesh.SetVertices(meshVertices.ToArray());
+                shapeMesh.SetIndices(new int[] { 1, 2, 0 }, MeshTopology.Triangles, 0);
+                shapeMesh.RecalculateBounds();
 
-        shapeMesh.SetVertices(meshVertices);
-        shapeMesh.SetIndices(new int[] { 0, 2, 1, 3}, MeshTopology.Quads, 0);
-        shapeMesh.RecalculateBounds();
+                MeshCollider coll = shape.AddComponent<MeshCollider>();
+                coll.sharedMesh = shapeMesh;
+            }
+        }
+        else //if(sctShape.Flags == 4095)
+        {
+            //Quad
+            if (ImportQuad)
+            {
+                foreach (ushort idx in sctShape.Indices)
+                    meshVertices.Add(m_header.Vertices[idx]);
 
-        MeshCollider coll = shape.AddComponent<MeshCollider>();
-        coll.sharedMesh = shapeMesh;
+                shapeMesh.SetVertices(meshVertices);
+                shapeMesh.SetIndices(new int[] { 1, 3, 2, 0 }, MeshTopology.Quads, 0);
+                shapeMesh.RecalculateBounds();
+
+                MeshCollider coll = shape.AddComponent<MeshCollider>();
+                coll.sharedMesh = shapeMesh;
+            }
+        }
+
+        if(DebugShapeVertex)
+        {
+            foreach(Vector3 vtx in meshVertices)
+            {
+                GameObject obj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                obj.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                obj.transform.parent = shape.transform;
+                obj.transform.position = vtx;
+            }
+        }
 
         m_ctx.AddObjectToAsset(shapeMesh.name, shapeMesh);
 

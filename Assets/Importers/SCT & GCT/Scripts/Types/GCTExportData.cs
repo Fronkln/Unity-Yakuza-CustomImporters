@@ -78,15 +78,15 @@ public class GCTExportData : MonoBehaviour
         return new GCTExportOutput[] { output };
     }
 
-    /// <summary>
-    /// We use this when we determine the mesh is from Unity. Because it doesn't have an extra vertex which
-    /// is the normal in GCT read shapes.
-    /// </summary>
     protected Vector3 GenerateNormal()
     {
         return transform.forward;
     }
-    
+    /// <summary>
+    /// We use this when we determine the mesh is from Unity. Because it doesn't have an extra vertex which
+    /// is the normal in GCT read shapes.
+    /// </summary>
+
     protected bool IsUnityShape()
     {
         switch(Type)
