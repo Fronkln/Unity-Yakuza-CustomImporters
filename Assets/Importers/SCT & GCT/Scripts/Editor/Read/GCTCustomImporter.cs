@@ -15,6 +15,9 @@ public class GCTCustomImporter : ScriptedImporter
 {
     public bool GenerateExportData = true;
 
+    [Header("Flips X scale of GCT. Enable in OOE/OE, Disable in DE")]
+    public bool FlipGCT = false;
+
     private AssetImportContext m_ctx;
     private DataReader m_reader = null;
     private DataStream m_readStream = null;
@@ -36,7 +39,14 @@ public class GCTCustomImporter : ScriptedImporter
         {
             m_ctx.AddObjectToAsset(gctData.Name.Text, createdStageObj);
             m_ctx.SetMainObject(createdStageObj);
+
+            if (FlipGCT)
+            {
+                //flip it so the view aligns with the game, it will become 1 during conversion, then -1 again
+                createdStageObj.transform.localScale = new Vector3(-1, 1, 1);
+            }
         }
+
     }
 
 
@@ -90,9 +100,6 @@ public class GCTCustomImporter : ScriptedImporter
                 generatedAABox.transform.parent = stageColl.transform;
         }
         */
-
-        //flip it so the view aligns with the game, it will become 1 during conversion, then -1 again
-        stageColl.transform.localScale = new Vector3(-1, 1, 1);
 
         return stageColl;
     }
