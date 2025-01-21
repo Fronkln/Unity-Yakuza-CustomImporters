@@ -102,7 +102,7 @@ public class GCTReader
         long vertexStart = m_reader.Stream.Position;
         long vertexEnd = m_reader.Stream.Length - 36;
 
-        int numVertices = (int)((vertexEnd - vertexStart) / 12);
+        int numVertices = (int)(((m_reader.Stream.Length - 72) - m_vertexChunk.Pointer) / 12);
         
         m_header.Vertices = new Vector3[numVertices];
 

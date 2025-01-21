@@ -9,6 +9,7 @@ public class SCTHeader
 
     public Bounds Bounds;
 
-    public SCTShape[] Shapes;
+    public SCTShape[] TriangleShapes;
+    public SCTShape[] QuadShapes;
     public Vector3[] Vertices;
 }

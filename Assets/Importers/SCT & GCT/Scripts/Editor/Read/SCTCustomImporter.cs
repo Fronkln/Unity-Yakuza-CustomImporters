@@ -64,12 +64,17 @@ public class SCTCustomImporter : ScriptedImporter
     {
         GameObject stageColl = new GameObject();
 
-        for (int i = 0; i < sctData.Shapes.Length; i++)
+        for (int i = 0; i < sctData.TriangleShapes.Length; i++)
         {
-            GenerateShape(sctData.Shapes[i], i).transform.parent = stageColl.transform;
+            GenerateShape(sctData.TriangleShapes[i], i).transform.parent = stageColl.transform;
         }
 
-        if(DebugVertex)
+        for (int i = 0; i < sctData.QuadShapes.Length; i++)
+        {
+            GenerateShape(sctData.QuadShapes[i], i).transform.parent = stageColl.transform;
+        }
+
+        if (DebugVertex)
         {
             GameObject holder = new GameObject("Vertices");
             holder.transform.parent = stageColl.transform;
@@ -93,13 +98,43 @@ public class SCTCustomImporter : ScriptedImporter
 
     private GameObject GenerateShape(SCTShape sctShape, int index)
     {
-        GameObject shape = new GameObject("Shape_" + index);
+        GameObject shape = new GameObject();
 
         Mesh shapeMesh = new Mesh();
-        shapeMesh.name = "Shape_" + index + "_Mesh";
 
         List<Vector3> meshVertices = new List<Vector3>();
-        
+
+        //Triangle
+        if (sctShape.Type == GCTShapeType.Triangle)
+        {
+            shape.name = "Triangle_" + index;
+            shapeMesh.name = "Triangle_" + index + "_Mesh";
+
+            meshVertices.Add(m_header.Vertices[sctShape.Indices[0]]);
+            meshVertices.Add(m_header.Vertices[sctShape.Indices[1]]);
+            meshVertices.Add(m_header.Vertices[sctShape.Indices[2]]);
+
+            shapeMesh.SetVertices(meshVertices.ToArray());
+            shapeMesh.SetIndices(new int[] { 1, 2, 0 }, MeshTopology.Triangles, 0);
+            shapeMesh.RecalculateBounds();
+        }
+        else
+        {
+            shape.name = "Quad_" + index;
+            shapeMesh.name = "Quad_" + index + "_Mesh";
+
+            foreach (ushort idx in sctShape.Indices)
+                meshVertices.Add(m_header.Vertices[idx]);
+
+            shapeMesh.SetVertices(meshVertices);
+            shapeMesh.SetIndices(new int[] { 1, 3, 2, 0 }, MeshTopology.Quads, 0);
+            shapeMesh.RecalculateBounds();
+        }
+
+        MeshCollider coll = shape.AddComponent<MeshCollider>();
+        coll.sharedMesh = shapeMesh;
+
+        /*
         if(sctShape.Flags == 0 || (sctShape.Flags & 32) != 0)
         {
             if (ImportTriangle)
@@ -133,8 +168,9 @@ public class SCTCustomImporter : ScriptedImporter
                 coll.sharedMesh = shapeMesh;
             }
         }
+        */
 
-        if(DebugShapeVertex)
+        if (DebugShapeVertex)
         {
             foreach(Vector3 vtx in meshVertices)
             {
