@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using UnityEngine;
 
@@ -8,17 +9,23 @@ using UnityEngine;
 public class GCTExporter : MonoBehaviour
 {
     public string OutputPath = "";
+    [Header("Write In Big Endian")]
     public bool IsOEGct = false;
 
     public int Flags;
     public uint HitFilter;
     public uint NodeDepth;
 
+    [Header("Don't export duplicate vertices")]
+    public bool Optimize = true;
+
+    [Space(20)]
     public Bounds Bounds;
 
     private GCTHeader m_generatedHeader;
 
     List<Vector3> m_vertices = new List<Vector3>();
+    Dictionary<Vector3, int> m_vertices_indexes = new Dictionary<Vector3, int>();
 
     public void Export()
     {
@@ -32,6 +39,7 @@ public class GCTExporter : MonoBehaviour
 
         m_generatedHeader = new GCTHeader();
         m_vertices = new List<Vector3>();
+        m_vertices_indexes = new Dictionary<Vector3, int>();
 
        // transform.localScale = new Vector3(1, 1, 1);
 
@@ -47,13 +55,6 @@ public class GCTExporter : MonoBehaviour
             GCTExportOutput[] outputShapes = exportingShapes[i].Export(shapeIdx);
             outputData.AddRange(outputShapes);
             shapeIdx += outputShapes.Length;
-
-            /*
-            if (exportingShapes[i] is GCTExportDataUnityBox)
-                shapeIdx += 6;
-            else
-                shapeIdx++;
-            */
         }
 
         //Vertices equal to zero = assume didnt export successfully and filter out.
@@ -72,9 +73,6 @@ public class GCTExporter : MonoBehaviour
         m_generatedHeader.Name.Set(transform.name);
 
         GCTWriter.Write(m_generatedHeader, IsOEGct, OutputPath);
-
-       // transform.localScale = new Vector3(-1, 1, 1);
-
 
         //Clear
         m_generatedHeader = new GCTHeader();
@@ -95,17 +93,52 @@ public class GCTExporter : MonoBehaviour
                 break;
         }
 
-        int verticesStart = m_vertices.Count;
-        m_vertices.AddRange(outputDat.Vertices);
-
         uint[] indices = new uint[outputDat.Vertices.Length - 1];
 
-        for(int i = 0; i < indices.Length; i++)
-            indices[i] = (uint)(verticesStart + i);
+        if (Optimize)
+        {
+            for (int i = 0; i < indices.Length; i++)
+            {
+                Vector3 vec = outputDat.Vertices[i];
+                
+                if(!m_vertices_indexes.ContainsKey(vec))
+                {
+                    m_vertices.Add(vec);
+                    m_vertices_indexes[vec] = m_vertices.Count - 1;
+                    indices[i] = (uint)(m_vertices.Count - 1);
+                }
+                else
+                {
+                    indices[i] = (uint)m_vertices_indexes[vec];
+                }
+            }
+      
+            Vector3 normal = outputDat.Vertices[outputDat.Vertices.Length - 1];
+
+            if (!m_vertices_indexes.ContainsKey(normal))
+            {
+                m_vertices.Add(normal);
+                m_vertices_indexes[normal] = m_vertices.Count - 1;
+                shape.NormalIndex = (uint)(m_vertices.Count - 1);
+            }
+            else
+            {
+                shape.NormalIndex = (uint)m_vertices_indexes[normal];
+            }
+        }
+        else
+        {
+            int verticesStart = m_vertices.Count;
+            m_vertices.AddRange(outputDat.Vertices);
+
+            for (int i = 0; i < indices.Length; i++)
+                indices[i] = (uint)(verticesStart + i);
+
+            shape.NormalIndex = (uint)verticesStart + (uint)indices.Length;
+        }
 
         shape.Header = outputDat.ShapeHeader;
         shape.Indices = indices;
-        shape.NormalIndex = (uint)verticesStart + (uint)indices.Length;
         shape.Product = outputDat.Product;
 
 
