@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
 
+[Serializable]
 public class SCTHeader
 {
     public string Magic; //SCTD
@@ -7,9 +9,16 @@ public class SCTHeader
     public int Flags;
     //int Padding
 
-    public Bounds Bounds;
+    public int Unknown;
+    public int Unknown2;
 
-    public SCTShape[] TriangleShapes;
-    public SCTShape[] QuadShapes;
-    public Vector3[] Vertices;
+    public SCTSphereBounds Bounds;
+    public byte[] UnknownRegion = new byte[48];
+
+    [NonSerialized]
+    public SCTShape[] TriangleShapes = new SCTShape[0];
+    [NonSerialized]
+    public SCTShape[] QuadShapes = new SCTShape[0];
+    [NonSerialized]
+    public Vector3[] Vertices = new Vector3[0];
 }

@@ -77,19 +77,19 @@ public static class GCTWriter
         uint nodeAABoxStart = (uint)writer.Stream.Position;
 
         foreach (GCTAABox box in gctFile.NodeAABoxes)
-            WriteAABox(writer, box);
+            writer.WriteGCTAABox(box);
 
         uint shapeAABoxStart = (uint)writer.Stream.Position;
 
         foreach (GCTAABox box in gctFile.ShapeAABoxes)
-            WriteAABox(writer, box);
+            writer.WriteGCTAABox(box);
 
         writer.WriteTimes(0, 32);
 
         uint verticesStart = (uint)writer.Stream.Position;
 
         foreach (Vector3 vec in gctFile.Vertices)
-            WriteVector3(writer, vec);
+         writer.WriteVector3(vec);
 
         writer.WriteTimes(0, 36);
 
@@ -113,27 +113,5 @@ public static class GCTWriter
         writer.Stream.Position = 12;
         writer.Write((uint)writer.Stream.Length);
         writer.Stream.WriteTo(path);
-    }
-
-    private static void WriteVector3(DataWriter writer, Vector3 vec)
-    {
-        writer.Write(vec.x);
-        writer.Write(vec.y);
-        writer.Write(vec.z);
-    }
-
-    private static void WriteVector4(DataWriter writer, Vector4 vec)
-    {
-        writer.Write(vec.x);
-        writer.Write(vec.y);
-        writer.Write(vec.z);
-        writer.Write(vec.w);
-    }
-
-    private static void WriteAABox(DataWriter writer, GCTAABox box)
-    {
-        WriteVector4(writer, box.Center);
-        WriteVector3(writer, box.Extents);
-        writer.Write(box.HitFilter);
     }
 }

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using Yarhl.IO;
 using System.Text;
+using System.Xml.Linq;
 
 [ScriptedImporter(1, "sct")]
 public class SCTCustomImporter : ScriptedImporter
@@ -54,9 +55,18 @@ public class SCTCustomImporter : ScriptedImporter
 
         if (createdCollisionObject != null)
         {
+            if (GenerateExportData)
+            {
+                SCTExporter exporter = createdCollisionObject.AddComponent<SCTExporter>();
+                exporter.Header = m_header;
+                exporter.OutputPath = ctx.assetPath;
+            }
+
             ctx.AddObjectToAsset(Path.GetFileNameWithoutExtension(ctx.assetPath), createdCollisionObject);
             ctx.SetMainObject(createdCollisionObject);
         }
+
+
     }
 
     //Create the stage collision object
@@ -134,41 +144,14 @@ public class SCTCustomImporter : ScriptedImporter
         MeshCollider coll = shape.AddComponent<MeshCollider>();
         coll.sharedMesh = shapeMesh;
 
-        /*
-        if(sctShape.Flags == 0 || (sctShape.Flags & 32) != 0)
-        {
-            if (ImportTriangle)
-            {
-                //Triangle
-                meshVertices.Add(m_header.Vertices[sctShape.Indices[0]]);
-                meshVertices.Add(m_header.Vertices[sctShape.Indices[1]]);
-                meshVertices.Add(m_header.Vertices[sctShape.Indices[3]]);
-
-                shapeMesh.SetVertices(meshVertices.ToArray());
-                shapeMesh.SetIndices(new int[] { 1, 2, 0 }, MeshTopology.Triangles, 0);
-                shapeMesh.RecalculateBounds();
-
-                MeshCollider coll = shape.AddComponent<MeshCollider>();
-                coll.sharedMesh = shapeMesh;
-            }
-        }
-        else //if(sctShape.Flags == 4095)
-        {
-            //Quad
-            if (ImportQuad)
-            {
-                foreach (ushort idx in sctShape.Indices)
-                    meshVertices.Add(m_header.Vertices[idx]);
-
-                shapeMesh.SetVertices(meshVertices);
-                shapeMesh.SetIndices(new int[] { 1, 3, 2, 0 }, MeshTopology.Quads, 0);
-                shapeMesh.RecalculateBounds();
-
-                MeshCollider coll = shape.AddComponent<MeshCollider>();
-                coll.sharedMesh = shapeMesh;
-            }
-        }
-        */
+        GameObject sphereBound = new GameObject("Sphere Bound");
+        sphereBound.transform.parent = shape.transform;
+        sphereBound.transform.localPosition = Vector3.zero;
+        sphereBound.transform.localRotation = Quaternion.identity;
+        
+        SphereCollider sphereColl = sphereBound.AddComponent<SphereCollider>();
+        sphereColl.center = sctShape.SphereBounds.Center;
+        sphereColl.radius = sctShape.SphereBounds.Radius;
 
         if (DebugShapeVertex)
         {
@@ -179,6 +162,18 @@ public class SCTCustomImporter : ScriptedImporter
                 obj.transform.parent = shape.transform;
                 obj.transform.position = vtx;
             }
+        }
+
+        if(GenerateExportData)
+        {
+            SCTExportData data = shape.gameObject.AddComponent<SCTExportData>();
+            data.Flags = sctShape.Flags;
+            data.Unknown = sctShape.Unknown;
+            data.UnknownData = sctShape.UnknownData;
+            data.UnknownValue = sctShape.UnknownValue;
+            data.BoundingSphere = sphereColl;
+            data.Mesh = shapeMesh;
+            data.Normal = sctShape.Normal;
         }
 
         m_ctx.AddObjectToAsset(shapeMesh.name, shapeMesh);

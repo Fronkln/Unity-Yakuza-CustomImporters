@@ -8,3 +8,8 @@ ScriptedImporter:
   assetBundleName: 
   assetBundleVariant: 
   script: {fileID: 11500000, guid: d3ae87e7477d63e4eadbe94c2b7b79bd, type: 3}
+  GenerateExportData: 1
+  DebugVertex: 0
+  DebugShapeVertex: 0
+  ImportQuad: 1
+  ImportTriangle: 1

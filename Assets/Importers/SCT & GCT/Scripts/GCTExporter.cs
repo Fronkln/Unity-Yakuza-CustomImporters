@@ -77,6 +77,7 @@ public class GCTExporter : MonoBehaviour
         //Clear
         m_generatedHeader = new GCTHeader();
         m_vertices = new List<Vector3>();
+        m_vertices_indexes = new Dictionary<Vector3, int>();
     }
 
     private GCTShape ConvertToShape(GCTExportOutput outputDat)

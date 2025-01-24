@@ -22,4 +22,12 @@ public static class DataReaderExtension {
     {
         return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
     }
+
+    /// <summary>
+    /// Read Vector4
+    /// </summary>
+    public static Vector4 ReadVector4(this DataReader reader)
+    {
+        return new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+    }
 }
