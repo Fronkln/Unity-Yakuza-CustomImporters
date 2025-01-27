@@ -3,14 +3,29 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Collections.Generic;
 using System;
+using static UnityEngine.EventSystems.EventTrigger;
+using Newtonsoft.Json.Linq;
 
 public class DEEntityImporter : MonoBehaviour
 {
-    public string EntityDirectory;
-    public string EntityTreePath;
+    [Header("Shared")]
     public TextAsset EntityKinds;
     public TextAsset Stages;
 
+    [Header("Import")]
+    public string EntityDirectory;
+    public string EntityTreePath;
+
+    [Space(10)]
+    [Header("Export")]
+    public string EntityTreeExportPath;
+    public string EntityExportPath;
+    public Formatting ExportFormatting;
+    public bool ExportEntityTree = true;
+    public bool ExportEntities = true;
+
+    //not finished yet
+    [HideInInspector]
     public bool OnlyImportTargetStageEntities = false;
 
     private Dictionary<uint, string> m_entityKinds = new Dictionary<uint, string>();
@@ -23,18 +38,8 @@ public class DEEntityImporter : MonoBehaviour
         public Dictionary<string, Transform> EntityKindFolders = new Dictionary<string, Transform>();
     }
 
-
-    public void Import()
+    private void CacheTypes()
     {
-        if (!File.Exists(EntityTreePath))
-        {
-            Debug.LogWarning("File does not exist");
-            return;
-        }
-
-        foreach (Transform t in transform)
-            DestroyImmediate(t.gameObject);
-
         m_entityDirs.Clear();
         m_stages.Clear();
         m_entityKinds.Clear();
@@ -54,6 +59,21 @@ public class DEEntityImporter : MonoBehaviour
             string[] split = s.Split(" = ");
             m_stages[uint.Parse(split[1].Trim())] = split[0].Trim();
         }
+
+    }
+
+    public void Import()
+    {
+        if (!File.Exists(EntityTreePath))
+        {
+            Debug.LogWarning("File does not exist");
+            return;
+        }
+
+        foreach (Transform t in transform)
+            DestroyImmediate(t.gameObject);
+
+        CacheTypes();
 
         DEEntityTreeEntry root = JsonConvert.DeserializeObject<DEEntityTreeEntry>(File.ReadAllText(EntityTreePath));
         EntityCreationRecursion(root).transform.parent = transform;
@@ -118,15 +138,82 @@ public class DEEntityImporter : MonoBehaviour
 
     public void Export()
     {
-        DEEntityTreeEntry root = EntityTreeExportRecursion(transform.GetComponentInChildren<DEEntityComponent>());
-        string outputPath = Path.Combine(new FileInfo(EntityTreePath).Directory.FullName, "entity_tree_test.json");
+        CacheTypes();
 
         JsonConvert.DefaultSettings = () => new JsonSerializerSettings
         {
-            NullValueHandling = NullValueHandling.Ignore
+            NullValueHandling = NullValueHandling.Ignore,
+            Formatting = ExportFormatting
         };
 
-        File.WriteAllText(outputPath, JsonConvert.SerializeObject(root, Formatting.None));
+        if (ExportEntityTree)
+        {
+            DEEntityTreeEntry root = EntityTreeExportRecursion(transform.GetComponentInChildren<DEEntityTreeComponent>());
+            string outputPath = EntityTreeExportPath;
+
+            File.WriteAllText(outputPath, JsonConvert.SerializeObject(root));
+        }
+
+        if(ExportEntities)
+        {
+            DEEntityComponent[] components = transform.GetComponentsInChildren<DEEntityComponent>();
+
+            foreach(DEEntityComponent ent in components)
+            {
+                JObject outputObject = EntityExport(ent);
+                JObject entity = (JObject)outputObject["centity_base"];
+
+                if (entity != null)
+                {
+                    JObject compMap = (JObject)outputObject["centity_base"]["m_entity_component_map"];
+
+                    if (compMap != null)
+                    {
+                        JObject basic = (JObject)compMap["basic"];
+
+                        if (basic != null)
+                        {
+                            JObject ec = (JObject)basic["p_ec"];
+
+                            if (ec != null)
+                            {
+                                ec["m_v_orient_x"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.x);
+                                ec["m_v_orient_y"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.y);
+                                ec["m_v_orient_z"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.z);
+                                ec["m_v_orient_w"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.w);
+
+                                ec["m_v_pos.x"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.x);
+                                ec["m_v_pos.y"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.y);
+                                ec["m_v_pos.z"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.z);
+                            }
+                        }
+                    }
+                }
+
+                string output = outputObject.ToString(ExportFormatting);
+
+                if(!string.IsNullOrEmpty(output))
+                {
+                    //TODO: Perhapsnot depend on entity tree component for this part
+                    DEEntityTreeComponent treeComp = ent.transform.GetComponent<DEEntityTreeComponent>();
+
+                    ulong UID = ulong.Parse(ent.transform.name, System.Globalization.NumberStyles.HexNumber);
+
+                    string childKind = m_entityKinds[DEEntityUtils.ExtractEntityKindFromUID(UID)];
+                    string stageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(treeComp.DS)];
+                    byte folder = DEEntityUtils.ExtractEntityFolderFromUID(UID);
+
+                    string filePath = Path.Combine(EntityExportPath, stageName, childKind, folder.ToString("x2"), ent.transform.name + ".txt");
+                    string dir = new FileInfo(filePath).Directory.FullName;
+
+                    if (!Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
+
+                    File.WriteAllText(filePath, output);
+                    
+                }
+            }
+        }
     }
 
     private Transform EntityCreationRecursion(DEEntityTreeEntry entry)
@@ -135,20 +222,20 @@ public class DEEntityImporter : MonoBehaviour
 
         string name = entry.Own.UID.ToString("X16");
         Transform t = new GameObject(name).transform;
-        DEEntityComponent comp = t.gameObject.AddComponent<DEEntityComponent>();
+        DEEntityTreeComponent comp = t.gameObject.AddComponent<DEEntityTreeComponent>();
 
         comp.Version = entry.Own.Version;
 
-        comp.PGS = new DEEntityComponentPGS[entry.Own.PGS.Length];
+        comp.PGS = new DEEntityTreeComponentPGS[entry.Own.PGS.Length];
 
         for (int i = 0; i < comp.PGS.Length; i++)
         {
             DEEntityTreeEntryPgs pgs = entry.Own.PGS[i];
-            DEEntityComponentPGS newPgs = new DEEntityComponentPGS();
+            DEEntityTreeComponentPGS newPgs = new DEEntityTreeComponentPGS();
             newPgs.Version = pgs.Version;
 
             foreach (DEEntityTreeEntryPgs.Ary ary in pgs.ary)
-                newPgs.Ary.Add(new DEEntityComponentPGS.PGSEntry() { Value = JsonConvert.SerializeObject(ary, Formatting.Indented) });
+                newPgs.Ary.Add(new DEEntityTreeComponentPGS.PGSEntry() { Value = JsonConvert.SerializeObject(ary, Formatting.Indented) });
 
             comp.PGS[i] = newPgs;
         }
@@ -157,6 +244,22 @@ public class DEEntityImporter : MonoBehaviour
         comp.FD = entry.Own.FD;
         comp.FG = entry.Own.FG;
         comp.DS = entry.Own.DS;
+
+
+        if (entry.Own.UID != 0)
+        {
+            string ownKind = m_entityKinds[DEEntityUtils.ExtractEntityKindFromUID(entry.Own.UID)];
+            string ownStageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(entry.Own.DS)];
+            byte folder = DEEntityUtils.ExtractEntityFolderFromUID(entry.Own.UID);
+
+            string filePath = Path.Combine(EntityDirectory, ownStageName, ownKind, folder.ToString("x2"), name + ".txt");
+
+            if (File.Exists(filePath))
+            {
+                DEEntityComponent entityComp = t.gameObject.AddComponent<DEEntityComponent>();
+                entityComp.EntityData = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(File.ReadAllText(filePath)), Formatting.Indented);
+            }
+        }
 
         foreach (DEEntityTreeEntry child in entry.Children)
         {
@@ -197,7 +300,7 @@ public class DEEntityImporter : MonoBehaviour
         return t;
     }
 
-    private DEEntityTreeEntry EntityTreeExportRecursion(DEEntityComponent comp)
+    private DEEntityTreeEntry EntityTreeExportRecursion(DEEntityTreeComponent comp)
     {
         DEEntityTreeEntry entry = new DEEntityTreeEntry();
         entry.Own.DS = comp.DS;
@@ -222,12 +325,12 @@ public class DEEntityImporter : MonoBehaviour
 
         for (int i = 0; i < entry.Own.PGS.Length; i++)
         {
-            DEEntityComponentPGS entPgs = comp.PGS[i];
+            DEEntityTreeComponentPGS entPgs = comp.PGS[i];
 
             DEEntityTreeEntryPgs pgs = new();
             pgs.Version = entPgs.Version;
 
-            foreach (DEEntityComponentPGS.PGSEntry upgs in entPgs.Ary)
+            foreach (DEEntityTreeComponentPGS.PGSEntry upgs in entPgs.Ary)
             {
                 string value = upgs.Value;
                 DEEntityTreeEntryPgs.Ary serializedPgsAry = JsonConvert.DeserializeObject<DEEntityTreeEntryPgs.Ary>(upgs.Value);
@@ -250,7 +353,7 @@ public class DEEntityImporter : MonoBehaviour
                     for (int j = 0; j < entityKindTransform.childCount; j++)
                     {
                         Transform entityTransform = entityKindTransform.GetChild(j);
-                        DEEntityComponent entityComponent = entityTransform.GetComponent<DEEntityComponent>();
+                        DEEntityTreeComponent entityComponent = entityTransform.GetComponent<DEEntityTreeComponent>();
 
                         if (entityComponent != null)
                         {
@@ -263,5 +366,10 @@ public class DEEntityImporter : MonoBehaviour
         }
 
         return entry;
+    }
+
+    private JObject EntityExport(DEEntityComponent entityComponent)
+    {
+        return (JObject) JsonConvert.DeserializeObject(entityComponent.EntityData);
     }
 }

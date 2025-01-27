@@ -1,8 +1,17 @@
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-public static class DEEntityUtils
+public unsafe static class DEEntityUtils
 {
+    public static float ParseIntAsFloat(int value)
+    {
+        return *(float*)&value;
+    }
+
+    public static int ParseFloatAsInt(float value)
+    {
+        return *(int*)&value;
+    }
     public static ushort ExtractEntityKindFromUID(ulong uid)
     {
         ulong shiftedValue = uid >> 32;
