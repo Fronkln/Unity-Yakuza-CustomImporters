@@ -100,9 +100,10 @@ public class GCTReader
         m_reader.Stream.Seek(m_vertexChunk.Pointer, SeekMode.Start);
 
         long vertexStart = m_reader.Stream.Position;
-        long vertexEnd = m_reader.Stream.Length - 36;
+        long vertexEnd = m_reader.Stream.Length - 4; //st_sai_tougi kiwami 2
+        //its okay if we read extra vertices by accident, we only will be using what the shapes actually reference!
 
-        int numVertices = (int)(((m_reader.Stream.Length - 72) - m_vertexChunk.Pointer) / 12);
+        int numVertices = (int)((vertexEnd - vertexStart) / 12);
         
         m_header.Vertices = new Vector3[numVertices];
 
