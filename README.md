@@ -1,5 +1,6 @@
 # Unity-Yakuza-CustomImporters
-ScriptedImporter for PAC, SCT, GCT and GMD!
+ScriptedImporter for PAC, DE Entities, SCT, GCT and GMD!
+<br>Check wiki for usage!
 
 
 Characters
