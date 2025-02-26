@@ -244,6 +244,7 @@ public class DEEntityImporter : MonoBehaviour
         comp.FD = entry.Own.FD;
         comp.FG = entry.Own.FG;
         comp.DS = entry.Own.DS;
+        comp.SRA = entry.Own.SRA;
 
 
         if (entry.Own.UID != 0)
@@ -318,7 +319,7 @@ public class DEEntityImporter : MonoBehaviour
         entry.Own.Orient[1] = transform.localRotation.y;
         entry.Own.Orient[2] = transform.localRotation.z;
         entry.Own.Orient[3] = transform.localRotation.w;
-        entry.Own.SRA = new List<object>();
+        entry.Own.SRA = comp.SRA;
         
         entry.Own.Version = comp.Version;
         entry.Own.UID = ulong.Parse(comp.name.ToString(), System.Globalization.NumberStyles.HexNumber);

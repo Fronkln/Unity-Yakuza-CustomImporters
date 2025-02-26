@@ -24,6 +24,7 @@ public class DEEntityTreeComponent : MonoBehaviour
     public DEEntityTreeComponentPGS[] PGS;
 
     public ulong DS;
+    public List<int> SRA;
 
     public float FD;
     public int FG;

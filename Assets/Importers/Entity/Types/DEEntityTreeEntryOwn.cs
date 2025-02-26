@@ -19,7 +19,7 @@ public struct DEEntityTreeEntryOwn
     [JsonProperty("pgs")]
     public DEEntityTreeEntryPgs[] PGS;
     [JsonProperty("sra")]
-    public List<object> SRA{ get; set; } //i dont think this is ever used
+    public List<int> SRA{ get; set; } //i dont think this is ever used 26.02.2025 update: it was used noob
     [JsonProperty("fd")]
     public float FD { get; set; }
     [JsonProperty("fg")]
