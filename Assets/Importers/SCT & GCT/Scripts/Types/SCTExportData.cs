@@ -23,10 +23,18 @@ public class SCTExportData : MonoBehaviour
         output.Unknown = Unknown;
         output.UnknownData = UnknownData;
         output.UnknownValue = UnknownValue;
+        
+        List<Vector3> actualVertices = new List<Vector3>(Mesh.vertices);
 
-        output.Vertices = Mesh.vertices;
+        for (int i = 0; i <  actualVertices.Count; i++)
+        {
+            Matrix4x4 localToWorld = transform.localToWorldMatrix;
+            actualVertices[i] = localToWorld.MultiplyPoint3x4(Mesh.vertices[i]);
+        }
 
-        output.Bounds.Center = BoundingSphere.center;
+        output.Vertices = actualVertices.ToArray();
+
+        output.Bounds.Center = BoundingSphere.transform.position + BoundingSphere.center;
         output.Bounds.Radius = BoundingSphere.radius;
 
         if(topology == MeshTopology.Triangles)

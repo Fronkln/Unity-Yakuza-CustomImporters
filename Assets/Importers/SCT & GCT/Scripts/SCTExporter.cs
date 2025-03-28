@@ -95,6 +95,16 @@ public class SCTExporter : MonoBehaviour
                 }
             }
         }
+        else
+        {
+            for (int i = 0; i < indices.Length; i++)
+            {
+                Vector3 vec = outputDat.Vertices[i];
+                m_vertices.Add(vec);
+                m_vertices_indexes[vec] = m_vertices.Count - 1;
+                indices[i] = (uint)(m_vertices.Count - 1);
+            }
+        }
 
         if (shape.Type == GCTShapeType.Quad)
         {

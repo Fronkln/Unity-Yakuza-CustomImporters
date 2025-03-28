@@ -146,12 +146,12 @@ public class SCTCustomImporter : ScriptedImporter
 
         GameObject sphereBound = new GameObject("Sphere Bound");
         sphereBound.transform.parent = shape.transform;
-        sphereBound.transform.localPosition = Vector3.zero;
         sphereBound.transform.localRotation = Quaternion.identity;
         
         SphereCollider sphereColl = sphereBound.AddComponent<SphereCollider>();
-        sphereColl.center = sctShape.SphereBounds.Center;
+        //sphereColl.center = sctShape.SphereBounds.Center;
         sphereColl.radius = sctShape.SphereBounds.Radius;
+        sphereBound.transform.position = sctShape.SphereBounds.Center;
 
         if (DebugShapeVertex)
         {

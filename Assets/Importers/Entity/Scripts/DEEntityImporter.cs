@@ -221,7 +221,8 @@ public class DEEntityImporter : MonoBehaviour
         Dictionary<string, StageDat> entityKindFolders = new Dictionary<string, StageDat>();
 
         string name = entry.Own.UID.ToString("X16");
-        Transform t = new GameObject(name).transform;
+        Transform t = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+        t.gameObject.name = name;
         DEEntityTreeComponent comp = t.gameObject.AddComponent<DEEntityTreeComponent>();
 
         comp.Version = entry.Own.Version;

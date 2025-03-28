@@ -9,6 +9,7 @@ using UnityEditor.Experimental.AssetImporters;
 using Yarhl.IO;
 using System.IO;
 using System.Linq;
+using System.Drawing.Printing;
 
 [ScriptedImporter(1, "gct")]
 public class GCTCustomImporter : ScriptedImporter
