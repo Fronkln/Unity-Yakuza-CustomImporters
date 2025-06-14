@@ -54,10 +54,18 @@ public class DEEntityImporter : MonoBehaviour
 
         dat = Stages.text.Split("\n");
 
-        foreach (string s in dat)
+        for(int i = 0; i < dat.Length; i++)
         {
-            string[] split = s.Split(" = ");
-            m_stages[uint.Parse(split[1].Trim())] = split[0].Trim();
+            string s = dat[i];
+            try
+            {
+                string[] split = s.Split(" = ");
+                m_stages[uint.Parse(split[1].Trim())] = split[0].Trim();
+            }
+            catch
+            {
+                Debug.LogError("Error entity kind parsing " + s);
+            }
         }
 
     }
@@ -66,7 +74,7 @@ public class DEEntityImporter : MonoBehaviour
     {
         if (!File.Exists(EntityTreePath))
         {
-            Debug.LogWarning("File does not exist");
+            Debug.LogWarning("Entity tree file does not exist");
             return;
         }
 
