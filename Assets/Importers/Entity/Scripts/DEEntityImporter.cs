@@ -183,31 +183,50 @@ public class DEEntityImporter : MonoBehaviour
             foreach (DEEntityComponent ent in components)
             {
                 JObject outputObject = EntityExport(ent);
-                JObject entity = (JObject)outputObject["centity_base"];
+                JToken entity = outputObject.GetEntityProperty().Value;
+                JObject compMap = null;
+                JObject basic = null;
 
                 if (entity != null)
                 {
-                    JObject compMap = (JObject)outputObject["centity_base"]["m_entity_component_map"];
+                    compMap = (JObject)entity["m_entity_component_map"];
 
-                    if (compMap != null)
+                    if (compMap == null)
                     {
-                        JObject basic = (JObject)compMap["basic"];
 
-                        if (basic != null)
+                        JToken entityBase = JsonUtils.FindCentityBaseObject(entity);
+
+                        if (entityBase != null)
                         {
-                            JObject ec = (JObject)basic["p_ec"];
+                            JToken entityBaseVal = entityBase["centity_base"];
 
-                            if (ec != null)
+
+                            if (entityBaseVal != null)
                             {
-                                ec["m_v_orient_x"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.x);
-                                ec["m_v_orient_y"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.y);
-                                ec["m_v_orient_z"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.z);
-                                ec["m_v_orient_w"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.w);
-
-                                ec["m_v_pos.x"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.x);
-                                ec["m_v_pos.y"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.y);
-                                ec["m_v_pos.z"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.z);
+                                compMap = (JObject)entityBaseVal["m_entity_component_map"];
                             }
+                        }
+                    }
+                }
+
+                if (compMap != null)
+                {
+                    basic = (JObject)compMap["basic"];
+
+                    if (basic != null)
+                    {
+                        JObject ec = (JObject)basic["p_ec"];
+
+                        if (ec != null)
+                        {
+                            ec["m_v_orient_x"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.x);
+                            ec["m_v_orient_y"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.y);
+                            ec["m_v_orient_z"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.z);
+                            ec["m_v_orient_w"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localRotation.w);
+
+                            ec["m_v_pos.x"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.x);
+                            ec["m_v_pos.y"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.y);
+                            ec["m_v_pos.z"] = DEEntityUtils.ParseFloatAsInt(ent.transform.localPosition.z);
                         }
                     }
                 }
