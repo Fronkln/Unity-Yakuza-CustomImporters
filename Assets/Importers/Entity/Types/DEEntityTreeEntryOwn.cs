@@ -24,4 +24,8 @@ public struct DEEntityTreeEntryOwn
     public float FD { get; set; }
     [JsonProperty("fg")]
     public int FG { get; set; }
+
+    [JsonProperty("st")]
+    [Header("DE1 only")]
+    public string Stage;
 }

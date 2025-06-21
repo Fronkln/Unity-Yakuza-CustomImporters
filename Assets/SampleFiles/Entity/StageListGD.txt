@@ -1,3 +1,4 @@
+invalid = 0
 st_kamuro = 1
 te_0006 = 2
 te_0007 = 3

@@ -24,6 +24,10 @@ public class DEEntityImporter : MonoBehaviour
     public bool ExportEntityTree = true;
     public bool ExportEntities = true;
 
+    [Space(10)]
+    [Header("Misc")]
+    public bool IsDE1 = false;
+
     //not finished yet
     [HideInInspector]
     public bool OnlyImportTargetStageEntities = false;
@@ -54,9 +58,13 @@ public class DEEntityImporter : MonoBehaviour
 
         dat = Stages.text.Split("\n");
 
-        for(int i = 0; i < dat.Length; i++)
+        for (int i = 0; i < dat.Length; i++)
         {
             string s = dat[i];
+            if (string.IsNullOrEmpty(s))
+
+                continue;
+
             try
             {
                 string[] split = s.Split(" = ");
@@ -84,6 +92,12 @@ public class DEEntityImporter : MonoBehaviour
         CacheTypes();
 
         DEEntityTreeEntry root = JsonConvert.DeserializeObject<DEEntityTreeEntry>(File.ReadAllText(EntityTreePath));
+
+        if (root.Own.Stage != null)
+            IsDE1 = true;
+        else
+            IsDE1 = false;
+
         EntityCreationRecursion(root).transform.parent = transform;
 
         /*
@@ -162,11 +176,11 @@ public class DEEntityImporter : MonoBehaviour
             File.WriteAllText(outputPath, JsonConvert.SerializeObject(root));
         }
 
-        if(ExportEntities)
+        if (ExportEntities)
         {
             DEEntityComponent[] components = transform.GetComponentsInChildren<DEEntityComponent>();
 
-            foreach(DEEntityComponent ent in components)
+            foreach (DEEntityComponent ent in components)
             {
                 JObject outputObject = EntityExport(ent);
                 JObject entity = (JObject)outputObject["centity_base"];
@@ -200,7 +214,7 @@ public class DEEntityImporter : MonoBehaviour
 
                 string output = outputObject.ToString(ExportFormatting);
 
-                if(!string.IsNullOrEmpty(output))
+                if (!string.IsNullOrEmpty(output))
                 {
                     //TODO: Perhapsnot depend on entity tree component for this part
                     DEEntityTreeComponent treeComp = ent.transform.GetComponent<DEEntityTreeComponent>();
@@ -218,7 +232,7 @@ public class DEEntityImporter : MonoBehaviour
                         Directory.CreateDirectory(dir);
 
                     File.WriteAllText(filePath, output);
-                    
+
                 }
             }
         }
@@ -259,10 +273,22 @@ public class DEEntityImporter : MonoBehaviour
         if (entry.Own.UID != 0)
         {
             string ownKind = m_entityKinds[DEEntityUtils.ExtractEntityKindFromUID(entry.Own.UID)];
-            string ownStageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(entry.Own.DS)];
+            string ownStageName;
+
+            if (!IsDE1)
+                ownStageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(entry.Own.DS)];
+            else
+                ownStageName = entry.Own.Stage;
+
+
             byte folder = DEEntityUtils.ExtractEntityFolderFromUID(entry.Own.UID);
 
-            string filePath = Path.Combine(EntityDirectory, ownStageName, ownKind, folder.ToString("x2"), name + ".txt");
+            string filePath;
+
+            if (entry.Own.Version > 5)
+                filePath = Path.Combine(EntityDirectory, ownStageName, ownKind, folder.ToString("x2"), name + ".txt");
+            else
+                filePath = Path.Combine(EntityDirectory, ownStageName, ownKind, name + ".txt");
 
             if (File.Exists(filePath))
             {
@@ -277,7 +303,12 @@ public class DEEntityImporter : MonoBehaviour
             if (childTransform != null)
             {
                 string childKind = m_entityKinds[DEEntityUtils.ExtractEntityKindFromUID(child.Own.UID)];
-                string stageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(child.Own.DS)];
+                string stageName;
+
+                if (!IsDE1)
+                    stageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(child.Own.DS)];
+                else
+                    stageName = child.Own.Stage;
 
                 if (!entityKindFolders.ContainsKey(stageName))
                 {
@@ -329,7 +360,7 @@ public class DEEntityImporter : MonoBehaviour
         entry.Own.Orient[2] = transform.localRotation.z;
         entry.Own.Orient[3] = transform.localRotation.w;
         entry.Own.SRA = comp.SRA;
-        
+
         entry.Own.Version = comp.Version;
         entry.Own.UID = ulong.Parse(comp.name.ToString(), System.Globalization.NumberStyles.HexNumber);
 
@@ -380,6 +411,6 @@ public class DEEntityImporter : MonoBehaviour
 
     private JObject EntityExport(DEEntityComponent entityComponent)
     {
-        return (JObject) JsonConvert.DeserializeObject(entityComponent.EntityData);
+        return (JObject)JsonConvert.DeserializeObject(entityComponent.EntityData);
     }
 }

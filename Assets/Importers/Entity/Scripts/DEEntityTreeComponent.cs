@@ -21,6 +21,9 @@ public class DEEntityTreeComponent : MonoBehaviour
 {
     public int Version;
 
+    [Header("DE1 only")]
+    public string Stage = null;
+
     public DEEntityTreeComponentPGS[] PGS;
 
     public ulong DS;
