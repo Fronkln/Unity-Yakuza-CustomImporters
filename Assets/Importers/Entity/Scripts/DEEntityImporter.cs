@@ -183,12 +183,19 @@ public class DEEntityImporter : MonoBehaviour
             foreach (DEEntityComponent ent in components)
             {
                 JObject outputObject = EntityExport(ent);
-                JToken entity = outputObject.GetEntityProperty().Value;
+                JToken entity = null;
                 JObject compMap = null;
                 JObject basic = null;
 
+                entity = (JObject)outputObject["centity_base"];
+
+                if(entity == null)
+                    entity = outputObject.GetEntityProperty().Value;
+
+
                 if (entity != null)
                 {
+                    
                     compMap = (JObject)entity["m_entity_component_map"];
 
                     if (compMap == null)
