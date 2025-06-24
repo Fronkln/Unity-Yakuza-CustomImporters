@@ -99,63 +99,6 @@ public class DEEntityImporter : MonoBehaviour
             IsDE1 = false;
 
         EntityCreationRecursion(root).transform.parent = transform;
-
-        /*
-        foreach (DEEntityTreeEntry entry in root.Children)
-        {
-
-            ushort kind = DEEntityUtils.ExtractEntityKindFromUID(entry.Own.UID);
-            byte folder = DEEntityUtils.ExtractEntityFolderFromUID(entry.Own.UID);
-            byte stageID = DEEntityUtils.ExtractStageIDFromDS(entry.Own.DS);
-            string stageName = m_stages[stageID];
-            string entityType = m_entityKinds[kind];
-            string name = entry.Own.UID.ToString("x16");
-
-            string filePath = Path.Combine(EntityDirectory, stageName, entityType, folder.ToString("x2"), name + ".txt");
-
-            if (File.Exists(filePath))
-            {
-                if (!m_entityDirs.ContainsKey(stageName))
-                {
-                    StageDat sdat = new StageDat();
-                    m_entityDirs[stageName] = new StageDat();
-
-                    GameObject stageTransform = new GameObject(stageName);
-                    stageTransform.transform.parent = transform;
-
-                    sdat.Transform = stageTransform.transform;
-
-                    m_entityDirs[stageName] = sdat;
-                }
-
-                StageDat stageData = m_entityDirs[stageName];
-
-                if (!stageData.EntityKindFolders.ContainsKey(entityType))
-                {
-                    GameObject entityTransform = new GameObject(entityType);
-                    entityTransform.transform.parent = stageData.Transform;
-
-                    stageData.EntityKindFolders[entityType] = entityTransform.transform;
-                }
-
-                Transform workgroupTransform = new GameObject(name).transform;
-                workgroupTransform.parent = stageData.EntityKindFolders[entityType].transform;
-
-                 Dictionary<string, Transform> entityKindFolders = new Dictionary<string, Transform>();
-
-                foreach(DEEntityTreeEntry centry in entry.Children)
-                {
-                    string childEntityType = m_entityKinds[DEEntityUtils.ExtractEntityKindFromUID(centry.Own.UID)];
-                    if(!entityKindFolders.ContainsKey(childEntityType))
-                    {
-                        GameObject dir = new GameObject(childEntityType);
-                        dir.transform.parent = workgroupTransform;
-                        entityKindFolders[childEntityType] = dir.transform;
-                    }
-                }
-            }
-        }
-        */
     }
 
     public void Export()
