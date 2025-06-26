@@ -36,6 +36,12 @@ public class DEEntityImporter : MonoBehaviour
     private Dictionary<uint, string> m_stages = new Dictionary<uint, string>();
     private Dictionary<string, StageDat> m_entityDirs = new Dictionary<string, StageDat>();
 
+
+    private string GetEntityKindName(uint kind)
+    {
+        return m_entityKinds[kind];
+    }
+
     public class StageDat
     {
         public Transform Transform = null;
@@ -190,7 +196,7 @@ public class DEEntityImporter : MonoBehaviour
 
                     ulong UID = ulong.Parse(ent.transform.name, System.Globalization.NumberStyles.HexNumber);
 
-                    string childKind = m_entityKinds[DEEntityUtils.ExtractEntityKindFromUID(UID)];
+                    string childKind = GetEntityKindName(DEEntityUtils.ExtractEntityKindFromUID(UID));
                     string stageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(treeComp.DS)];
                     byte folder = DEEntityUtils.ExtractEntityFolderFromUID(UID);
 
@@ -213,6 +219,9 @@ public class DEEntityImporter : MonoBehaviour
 
         string name = entry.Own.UID.ToString("X16");
         Transform t = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
+        t.localScale = new Vector3(0.5f, 0.5f, 0.5f);
+
+
         t.gameObject.name = name;
         DEEntityTreeComponent comp = t.gameObject.AddComponent<DEEntityTreeComponent>();
 
@@ -248,6 +257,36 @@ public class DEEntityImporter : MonoBehaviour
                 ownStageName = m_stages[DEEntityUtils.ExtractStageIDFromDS(entry.Own.DS)];
             else
                 ownStageName = entry.Own.Stage;
+
+            GameObject model = null;
+
+            switch (ownKind)
+            {
+                case "dispose_folder":
+                case "dispose_workgroup":
+                    DestroyImmediate(t.GetComponent<MeshRenderer>());
+                    break;
+
+
+                case "character":
+                    model = Instantiate(Resources.Load<GameObject>("pac_character"));
+
+                    model.transform.parent = t.transform;
+                    model.transform.localPosition = Vector3.zero;
+                    break;
+
+                case "asset_unit":
+                    t.GetComponent<MeshRenderer>().sharedMaterial = Resources.Load<Material>("casset_unit_material");
+                    break;
+
+            }
+
+            if(model != null)
+            {
+                model.transform.localScale = new Vector3(1, 1, 1);
+                t.transform.localScale = new Vector3(1, 1, 1);
+                DestroyImmediate(t.GetComponent<MeshRenderer>());
+            }
 
 
             byte folder = DEEntityUtils.ExtractEntityFolderFromUID(entry.Own.UID);
