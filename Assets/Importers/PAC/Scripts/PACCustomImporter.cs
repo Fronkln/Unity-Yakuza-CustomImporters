@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using Yarhl.IO;
 using System.Text;
-using System.Xml;
 
 [ScriptedImporter(1, "pac")]
 public class PACCustomImporter : ScriptedImporter

@@ -10,11 +10,7 @@ using System.Collections;
 
 public class BasicGameIntegration : MonoBehaviour
 {
-    public string ExeName = "Yakuza5";
-    public string FileToRead = "integration_session";
-
     public GameObject Player;
-    FileSystemWatcher watcher;
 
     private Vector3 pos;
     private Vector3 euler;
