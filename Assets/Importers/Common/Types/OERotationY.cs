@@ -10,7 +10,7 @@ public class OERotationY : MonoBehaviour
         return angle;
     }
 
-    public static ushort ToOERotation(ushort oeRotation)
+    public static ushort ToOERotation(float oeRotation)
     {
         ushort angle = (ushort)((oeRotation * ushort.MaxValue) / 360f);
         return angle;

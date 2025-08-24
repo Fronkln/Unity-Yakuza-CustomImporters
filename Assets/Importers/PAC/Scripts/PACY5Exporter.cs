@@ -30,6 +30,12 @@ public class PACY5Exporter : MonoBehaviour
 
         foreach (PACComponentY5 entity in entities)
         {
+            if (entity.BaseEntityData.Length > 0)
+            {
+                entity.BaseEntityData[0].Position = entity.transform.position;
+                entity.BaseEntityData[0].Angle = (short)OERotationY.ToOERotation(entity.transform.eulerAngles.y);
+            }
+
             headerLocations[entity] = writer.Stream.Position;
 
             int uid = int.Parse(entity.transform.name, System.Globalization.NumberStyles.HexNumber);
