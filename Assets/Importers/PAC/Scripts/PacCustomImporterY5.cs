@@ -12,6 +12,9 @@ using System.Text;
 [ScriptedImporter(1, "pac5")]
 public class PacCustomImporterY5 : ScriptedImporter
 {
+    [Header("OOE = Yakuza 5, OE = Ishin and above")]
+    public bool IsOOE;
+
     private AssetImportContext m_ctx;
     private DataReader m_reader = null;
     private DataStream m_readStream = null;
@@ -224,7 +227,7 @@ public class PacCustomImporterY5 : ScriptedImporter
                                                 chunk.Unknown3 = m_reader.ReadInt32();
                                                 chunk.Unknown4 = m_reader.ReadInt32();
 
-                                                pacRef.RefChunks.Add(chunk);
+                                                pacRef.MsgProperties.Add(chunk);
                                             }
                                         }, header.CCCDataPtr + refStructPointer);
                                     }

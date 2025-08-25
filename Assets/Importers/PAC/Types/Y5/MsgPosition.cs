@@ -4,6 +4,6 @@ using UnityEngine;
 public struct MsgPosition
 {
     public Vector3 Position;
-    public short Angle;
     public short Unk;
+    public short Angle;
 }

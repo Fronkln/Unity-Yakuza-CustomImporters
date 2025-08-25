@@ -90,29 +90,39 @@ public class PACY5Exporter : MonoBehaviour
             {
                 groupRefLocations[group] = new Dictionary<PACRef, long>();
 
-                foreach(var refStruct in group.Refs)
+                Dictionary<PACRef, long>  structLocations = new Dictionary<PACRef, long>();
+
+                foreach (var refStruct in group.Refs)
                 {
                     groupRefLocations[group][refStruct] = writer.Stream.Position;
 
                     writer.Write(refStruct.TextToggle);
-                    writer.Write((byte)refStruct.RefChunks.Count);
+                    writer.Write((byte)refStruct.MsgProperties.Count);
                     writer.Write((byte)0);
 
                     //string
                     writer.Write(0);
-
-                    //Ref struct chunk
-                    int refStructAddr = (int)((writer.Stream.Position + 4) - msgStart);
-                    writer.Write(refStructAddr);
-
-                    foreach (var refChunk in refStruct.RefChunks)
+                    //ref struct address
+                    writer.Write(0);
+                }
+                foreach (var refStruct in group.Refs)
+                {
+                    int refStructAddr = (int)(writer.Stream.Position - msgStart);
+                    foreach (var refChunk in refStruct.MsgProperties)
                     {
                         writer.Write(refChunk.Unknown);
                         writer.Write(refChunk.Unknown2);
                         writer.Write(refChunk.Unknown3);
                         writer.Write(refChunk.Unknown4);
                     }
+
+                    writer.Stream.RunInPosition(delegate
+                    {
+                        writer.Stream.Position += 8;
+                        writer.Write(refStructAddr);
+                    }, groupRefLocations[group][refStruct]);
                 }
+
             }
 
             foreach (PACMsgGroup group in entity.MsgData.Groups)
@@ -125,6 +135,9 @@ public class PACY5Exporter : MonoBehaviour
                     writer.Write(condition.Unknown2);
                     writer.Write(condition.Unknown3);
                 }
+
+                if (group.Conditions.Count <= 0)
+                    groupConditionLocations[group] = 0;
             }
 
             //TODO: write ref strings here
@@ -155,8 +168,8 @@ public class PACY5Exporter : MonoBehaviour
                     writer.Write(pos.Position.x);
                     writer.Write(pos.Position.y);
                     writer.Write(pos.Position.z);
-                    writer.Write(pos.Angle);
                     writer.Write(pos.Unk);
+                    writer.Write(pos.Angle);
                 }
             }
 
@@ -192,6 +205,9 @@ public class PACY5Exporter : MonoBehaviour
                 {
                     int condLocation = (int)(groupConditionLocations[kv.Key] - msgStart);
                     int refLocation = (int)(groupRefLocations[kv.Key][kv.Key.Refs[0]] - msgStart);
+
+                    if (condLocation < 0)
+                        condLocation = 0;
 
                     writer.Stream.Seek(kv.Value);
                     writer.Write(condLocation);
