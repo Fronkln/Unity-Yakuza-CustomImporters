@@ -45,7 +45,7 @@ public static class GCTWriter
         writer.Write(gctFile.Bounds.Center.x);
         writer.Write(gctFile.Bounds.Center.y);
         writer.Write(gctFile.Bounds.Center.z);
-        writer.Write(((Vector3)gctFile.Bounds.Center).magnitude);
+        writer.Write(gctFile.Bounds.Extents.magnitude);
         writer.Write(gctFile.Bounds.Extents.x);
         writer.Write(gctFile.Bounds.Extents.y);
         writer.Write(gctFile.Bounds.Extents.z);
