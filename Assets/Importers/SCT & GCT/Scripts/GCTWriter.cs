@@ -8,13 +8,15 @@ public static class GCTWriter
 {
     public static void Write(GCTHeader gctFile, bool oeGCT, string path)
     {
-        DataWriter writer = new DataWriter(new DataStream()) { Endianness = (!oeGCT ? EndiannessMode.LittleEndian : EndiannessMode.BigEndian) };
+        DataWriter writer = new DataWriter(new DataStream()) { Endianness = EndiannessMode.BigEndian };
         writer.Write("GCTD", false);
 
         if (oeGCT)
             writer.Write((uint)4278255616);
         else
             writer.Write((uint)4278190080);
+
+        writer.Endianness = (!oeGCT ? EndiannessMode.LittleEndian : EndiannessMode.BigEndian);
 
         writer.Write(gctFile.Flags);
         writer.Write(0); //Filesize, return later
@@ -40,14 +42,14 @@ public static class GCTWriter
         writer.WriteTimes(0, 8);
 
         //Write bounds
-        writer.Write(gctFile.Bounds.center.x);
-        writer.Write(gctFile.Bounds.center.y);
-        writer.Write(gctFile.Bounds.center.z);
-        writer.Write(0);
-        writer.Write(gctFile.Bounds.extents.x);
-        writer.Write(gctFile.Bounds.extents.y);
-        writer.Write(gctFile.Bounds.extents.z);
-        writer.Write(0);
+        writer.Write(gctFile.Bounds.Center.x);
+        writer.Write(gctFile.Bounds.Center.y);
+        writer.Write(gctFile.Bounds.Center.z);
+        writer.Write(((Vector3)gctFile.Bounds.Center).magnitude);
+        writer.Write(gctFile.Bounds.Extents.x);
+        writer.Write(gctFile.Bounds.Extents.y);
+        writer.Write(gctFile.Bounds.Extents.z);
+        writer.Write(gctFile.Bounds.HitFilter);
 
         writer.WriteTimes(0, 36);
 

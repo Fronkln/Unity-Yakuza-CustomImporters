@@ -64,9 +64,8 @@ public class PacCustomImporterY5 : ScriptedImporter
             if (entity.EntityData.Length > 0)
             {
                 pacGameObject.transform.position = entity.EntityData[0].Position;
-                pacGameObject.transform.eulerAngles = new Vector3(0, OERotationY.ToAngle((ushort)entity.EntityData[0].Angle), 0);
+                pacGameObject.transform.eulerAngles = new Vector3(0, -OERotationY.ToAngle((ushort)entity.EntityData[0].Angle), 0);
             }
-
             GameObject model = null;
 
             switch(entity.Type)
@@ -86,6 +85,27 @@ public class PacCustomImporterY5 : ScriptedImporter
                 pacGameObject.transform.localScale = new Vector3(1, 1, 1);
                 DestroyImmediate(pacGameObject.GetComponent<MeshRenderer>());
             }
+
+            if (entity.MsgData.Groups != null && entity.MsgData.Groups.Count > 0)
+            {
+                GameObject msgRoot = new GameObject("Msg");
+                msgRoot.transform.parent = pacGameObject.transform;
+                msgRoot.transform.localPosition = Vector3.zero;
+
+
+                for (int k = 0; k < entity.MsgData.Positions.Count; k++)
+                {
+                    var pos = entity.MsgData.Positions[k];
+
+                    GameObject posObj = new GameObject("Position " + k);
+                    posObj.transform.position = pos.Position;
+                    posObj.transform.parent = msgRoot.transform;
+                    posObj.transform.eulerAngles = new Vector3(0, -OERotationY.ToAngle((ushort)pos.Angle), 0);
+                    posObj.transform.position = pos.Position;
+                }
+
+            }
+
         }
 
 
@@ -221,8 +241,9 @@ public class PacCustomImporterY5 : ScriptedImporter
                                         {
                                             for (int j = 0; j < refStructCount; j++)
                                             {
-                                                PACRefChunk chunk = new PACRefChunk();
-                                                chunk.Unknown = m_reader.ReadInt32();
+                                                MsgProperty chunk = new MsgProperty();
+                                                chunk.PropertyID = m_reader.ReadUInt16();
+                                                chunk.Unknown = m_reader.ReadUInt16();
                                                 chunk.Unknown2 = m_reader.ReadInt32();
                                                 chunk.Unknown3 = m_reader.ReadInt32();
                                                 chunk.Unknown4 = m_reader.ReadInt32();
@@ -251,7 +272,7 @@ public class PacCustomImporterY5 : ScriptedImporter
                     for (int k = 0; k < msgHeader.PositionsCount; k++)
                     {
                         MsgPosition pos = new MsgPosition();
-                        pos.Position = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+                        pos.Position = m_reader.ReadPXDVector3();
                         pos.Unk = m_reader.ReadInt16();
                         pos.Angle = m_reader.ReadInt16();
 

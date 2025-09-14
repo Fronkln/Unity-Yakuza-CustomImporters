@@ -22,6 +22,13 @@ public static class DataReaderExtension {
     {
         return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
     }
+    /// <summary>
+    /// Read PXDVector3 (Vectgr3 that will have its X flipped when converted to Unity)
+    /// </summary>
+    public static PXDVector3 ReadPXDVector3(this DataReader reader)
+    {
+        return new PXDVector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+    }
 
     /// <summary>
     /// Read Vector4

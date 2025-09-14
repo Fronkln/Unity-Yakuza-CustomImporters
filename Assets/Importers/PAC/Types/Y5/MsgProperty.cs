@@ -1,9 +1,10 @@
 using UnityEngine;
 
 [System.Serializable]
-public class PACRefChunk
+public class MsgProperty
 {
-    public int Unknown;
+    public ushort PropertyID;
+    public ushort Unknown;
     public int Unknown2;
     public int Unknown3;
     public int Unknown4;

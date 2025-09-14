@@ -33,7 +33,26 @@ public class PACY5Exporter : MonoBehaviour
             if (entity.BaseEntityData.Length > 0)
             {
                 entity.BaseEntityData[0].Position = entity.transform.position;
-                entity.BaseEntityData[0].Angle = (short)OERotationY.ToOERotation(entity.transform.eulerAngles.y);
+                entity.BaseEntityData[0].Angle = (short)OERotationY.ToOERotation(-entity.transform.eulerAngles.y);
+            }
+
+            var msgRoot = entity.transform.Find("Msg");
+            if (msgRoot != null)
+            {
+                int posCount = msgRoot.childCount;
+
+                entity.MsgData.Positions = new List<MsgPosition>();
+
+                for(int i = 0; i < posCount; i++)
+                {
+                    var posTransform = msgRoot.GetChild(i);
+
+                    entity.MsgData.Positions.Add(new MsgPosition()
+                    {
+                        Position = posTransform.position,
+                        Angle = (short)OERotationY.ToOERotation(-posTransform.eulerAngles.y),
+                    });
+                }
             }
 
             headerLocations[entity] = writer.Stream.Position;
@@ -110,6 +129,7 @@ public class PACY5Exporter : MonoBehaviour
                     int refStructAddr = (int)(writer.Stream.Position - msgStart);
                     foreach (var refChunk in refStruct.MsgProperties)
                     {
+                        writer.Write(refChunk.PropertyID);
                         writer.Write(refChunk.Unknown);
                         writer.Write(refChunk.Unknown2);
                         writer.Write(refChunk.Unknown3);
@@ -262,9 +282,7 @@ public class PACY5Exporter : MonoBehaviour
 
             foreach(var entityDat in entity.BaseEntityData)
             {
-                writer.Write(entityDat.Position.x);
-                writer.Write(entityDat.Position.y);
-                writer.Write(entityDat.Position.z);
+                writer.WritePXDVector3(entityDat.Position);
                 writer.Write(entityDat.Angle);
                 writer.Write((byte)entity.BaseEntityData.Length);
                 writer.Write(entityDat.Flags);

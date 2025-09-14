@@ -14,7 +14,7 @@ public class DEEntityImporter : MonoBehaviour
 
     [Header("Import")]
     public string EntityDirectory;
-    public string EntityTreePath;
+    public string StageToImport;
 
     [Space(10)]
     [Header("Export")]
@@ -86,9 +86,11 @@ public class DEEntityImporter : MonoBehaviour
 
     public void Import()
     {
-        if (!File.Exists(EntityTreePath))
+        string entityTreePath = Path.Combine(EntityDirectory, "z_entity_tree", StageToImport + ".json");
+
+        if (!File.Exists(entityTreePath))
         {
-            Debug.LogWarning("Entity tree file does not exist");
+            Debug.LogWarning("Entity tree file does not exist!\nPath: " + entityTreePath);
             return;
         }
 
@@ -97,7 +99,7 @@ public class DEEntityImporter : MonoBehaviour
 
         CacheTypes();
 
-        DEEntityTreeEntry root = JsonConvert.DeserializeObject<DEEntityTreeEntry>(File.ReadAllText(EntityTreePath));
+        DEEntityTreeEntry root = JsonConvert.DeserializeObject<DEEntityTreeEntry>(File.ReadAllText(entityTreePath));
 
         if (root.Own.Stage != null)
             IsDE1 = true;
@@ -131,7 +133,14 @@ public class DEEntityImporter : MonoBehaviour
 
             foreach (DEEntityComponent ent in components)
             {
+                if (!ent.isActiveAndEnabled || !ent.gameObject.activeInHierarchy)
+                    continue;
+
                 JObject outputObject = EntityExport(ent);
+
+                if (outputObject == null)
+                    continue;
+
                 JToken entity = null;
                 JObject compMap = null;
                 JObject basic = null;
@@ -301,7 +310,14 @@ public class DEEntityImporter : MonoBehaviour
             if (File.Exists(filePath))
             {
                 DEEntityComponent entityComp = t.gameObject.AddComponent<DEEntityComponent>();
-                entityComp.EntityData = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(File.ReadAllText(filePath)), Formatting.Indented);
+                try
+                {
+                    entityComp.EntityData = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(File.ReadAllText(filePath)), Formatting.Indented);
+                }
+                catch
+                {
+                    Debug.LogError("Error parsing " + filePath);
+                }
             }
         }
 

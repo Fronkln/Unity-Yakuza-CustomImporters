@@ -52,8 +52,10 @@ public class GCTReader
         m_header.NodeDepth = m_reader.ReadUInt32();
         m_reader.Stream.Position += 8; //empty space
 
-        m_header.Bounds.center = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
-        m_header.Bounds.extents = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+        m_header.Bounds.Center = new Vector4(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+        m_header.Bounds.Extents = new Vector3(m_reader.ReadSingle(), m_reader.ReadSingle(), m_reader.ReadSingle());
+        m_header.Bounds.HitFilter = m_reader.ReadInt32();
+        
         m_reader.Stream.Position += 36; //empty space
         m_reader.Stream.Position += 8; //unneeded node/shape counts we already knew
         m_reader.Stream.Position += 84; //empty space

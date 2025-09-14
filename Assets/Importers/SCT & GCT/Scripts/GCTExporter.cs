@@ -20,7 +20,7 @@ public class GCTExporter : MonoBehaviour
     public bool Optimize = true;
 
     [Space(20)]
-    public Bounds Bounds;
+    public GCTAABox Bounds;
 
     private GCTHeader m_generatedHeader;
 

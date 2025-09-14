@@ -36,7 +36,7 @@ public class BasePACEntityDataY5
         long dataStart = reader.Stream.Position;
         long dataEnd = reader.Stream.Position + size;
 
-        data.Position = reader.ReadVector3();
+        data.Position = reader.ReadPXDVector3();
         data.Angle = reader.ReadInt16();
         data.Data2Count = reader.ReadByte();
         data.Flags = reader.ReadByte();

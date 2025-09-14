@@ -9,7 +9,7 @@ public class GCTHeader
 
     public uint HitFilter;
     public uint NodeDepth;
-    public Bounds Bounds;
+    public GCTAABox Bounds;
 
     public PXDHash Name = new PXDHash();
 

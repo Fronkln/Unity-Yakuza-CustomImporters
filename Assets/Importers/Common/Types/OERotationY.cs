@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class OERotationY : MonoBehaviour
+public static class OERotationY
 {
     public static float ToAngle(ushort oeRotation)
     {
