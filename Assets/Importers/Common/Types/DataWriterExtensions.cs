@@ -2,7 +2,20 @@ using UnityEngine;
 using Yarhl.IO;
 
 public static class DataWriterExtensions
-{   
+{
+    public static int Align(this DataWriter writer, int alignment)
+    {
+        int mod = (int)writer.Stream.Position % alignment;
+
+        if (mod == 0)
+            return 0;
+
+        int neededBytes = alignment - mod;
+
+        writer.WriteTimes(0, neededBytes);
+        return neededBytes;
+    }
+
     public static void WritePXDVector3(this DataWriter writer, PXDVector3 vec)
     {
         writer.Write(vec.x);

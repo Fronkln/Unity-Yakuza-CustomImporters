@@ -142,9 +142,22 @@ public class PacCustomImporterY5 : ScriptedImporter
 
             BasePACEntityDataY5[] entityDats = new BasePACEntityDataY5[totalData2Count];
 
+            long start = m_reader.Stream.Position;
+            long end = m_reader.Stream.Position + header.Data2Size;
+
             for (int k = 0; k < totalData2Count; k++)
             {
-                entityDats[k] = BasePACEntityDataY5.Read(m_reader, header.Type, sizePerData);
+                entityDats[k] = BasePACEntityDataY5.Read(m_reader, header.NodeID, entityDats[0], header.Type, k, sizePerData, totalData2Count);
+            }
+
+            if(m_reader.Stream.Position < end)
+            {
+                throw new System.Exception("UNDERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
+            }
+
+            if (m_reader.Stream.Position > end)
+            {
+                throw new System.Exception("OVERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
             }
 
             m_reader.Stream.Position = header.CCCDataPtr;
@@ -220,7 +233,9 @@ public class PacCustomImporterY5 : ScriptedImporter
                                 {
                                     PACRef pacRef = new PACRef();
 
-                                    pacRef.TextToggle = m_reader.ReadInt16();
+       
+                                    pacRef.TextLength = m_reader.ReadInt16();
+
                                     byte refStructCount = m_reader.ReadByte();
                                     m_reader.Stream.Position += 1;
 
@@ -232,7 +247,7 @@ public class PacCustomImporterY5 : ScriptedImporter
 
                                     m_reader.Stream.RunInPosition(delegate
                                     {
-                                        pacRef.Text = m_reader.ReadString();
+                                        pacRef.Text = m_reader.ReadString(pacRef.TextLength);
                                     }, textAddr);
 
                                     if (refStructCount > 0)
