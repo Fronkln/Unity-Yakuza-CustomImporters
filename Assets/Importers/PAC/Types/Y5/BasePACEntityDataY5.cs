@@ -12,6 +12,9 @@ public class BasePACEntityDataY5
 
     public byte[] UnreadData;
 
+    //Better-ish way to universally serialize data, inspired from S2U
+    public PACEntityKeyValueDictionary KeyValues = new PACEntityKeyValueDictionary();
+
     public virtual void ReadData(DataReader reader)
     {
 
@@ -22,7 +25,7 @@ public class BasePACEntityDataY5
 
     }
 
-    public static BasePACEntityDataY5 Read(DataReader reader, int entityUID, BasePACEntityDataY5 first, byte propertyType, int index, int size, int totalCount)
+    public static BasePACEntityDataY5 Read(DataReader reader, int entityUID, BasePACEntityDataY5 first, byte propertyType, int index, int size, int totalCount, DisposeString disposeString = null)
     {
         BasePACEntityDataY5 data = null;
 
@@ -31,8 +34,10 @@ public class BasePACEntityDataY5
             default:
                 data = new BasePACEntityDataY5();
                 break;
+
+                //character
             case 0:
-                bool isFighter = first != null && first.UnreadData[19] != 0 && index > 0;
+                bool isFighter = false;
                 bool isFighterFlag = false;
 
                 if(index <= 0)
@@ -49,18 +54,29 @@ public class BasePACEntityDataY5
                 data.Data2Count = reader.ReadByte();
                 data.Flags = reader.ReadByte();
 
+                data.KeyValues.Add("behavior", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.Add("model", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.Add("animation", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.Add("stance", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.Add("flags1", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("height", reader.ReadByte().ToString(), KeyValueType.Byte);
+
+                isFighter = first != null && int.Parse(first.KeyValues["flags1"]) != 0 && index > 0;
+
                 if (isFighterFlag && totalCount == 1)
-                    data.UnreadData = reader.ReadBytes(72);
+                    data.UnreadData = reader.ReadBytes(51);
                 else
                 {
                     if (isFighterFlag || isFighter && index != totalCount - 1)
-                        data.UnreadData = reader.ReadBytes(68);
+                    {
+                        data.UnreadData = reader.ReadBytes(47);
+                    }
                     else
                     {
                         if (!isFighterFlag && !isFighter)
-                            data.UnreadData = reader.ReadBytes(60);
+                            data.UnreadData = reader.ReadBytes(39);
                         else
-                            data.UnreadData = reader.ReadBytes(100);
+                            data.UnreadData = reader.ReadBytes(79);
                     }
                 }
 

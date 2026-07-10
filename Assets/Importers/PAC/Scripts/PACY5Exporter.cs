@@ -1,14 +1,21 @@
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Resolvers;
 using UnityEngine;
+using UnityEngine.Diagnostics;
 using Yarhl.IO;
 
 //TODO: Write ref strings, also importer only reads one ref, but there are multiple! its an array
 public class PACY5Exporter : MonoBehaviour
 {
     public string Path;
+
+    [Header("If you used dispose_string to import, you'll need it for export too")]
+    public DisposeString DisposeString;
+
     public void Export()
     {
         PACComponentY5[] entities = transform.GetComponentsInChildren<PACComponentY5>();
@@ -225,7 +232,7 @@ public class PACY5Exporter : MonoBehaviour
                     {
                         string str = entity.MsgData.Strings[i];
                         stringPositions[i] = (int)(writer.Stream.Position - msgStart);
-                        writer.Write(str);
+                        writer.Write(str, true, System.Text.Encoding.UTF8);
                     }
 
                     finalPadding = writer.Align(4);
@@ -307,6 +314,60 @@ public class PACY5Exporter : MonoBehaviour
                 writer.Write(entityDat.Angle);
                 writer.Write((byte)entity.BaseEntityData.Length);
                 writer.Write(entityDat.Flags);
+
+
+                foreach(var kv in entityDat.KeyValues)
+                {
+                    switch(entityDat.KeyValues.GetTypeForKey(kv.Key))
+                    {
+                        default:
+                            throw new System.Exception("Don't know how to write keyvalue type");
+
+
+                        case KeyValueType.Byte:
+                            writer.Write(System.Convert.ToByte(kv.Value));
+                            break;
+                        case KeyValueType.Short:
+                            writer.Write(System.Convert.ToInt16(kv.Value));
+                            break;
+                        case KeyValueType.Int:
+                            writer.Write(System.Convert.ToInt32(kv.Value));
+                            break;
+                        case KeyValueType.Float:
+                            writer.Write(float.Parse(kv.Value, System.Globalization.CultureInfo.InvariantCulture));
+                            break;
+                        case KeyValueType.DisposeString:
+
+                            if(string.IsNullOrEmpty(kv.Value))
+                            {
+                                writer.Write(0);
+                                break;
+                            }
+
+                            bool isIndex = !kv.Value.Any(x => char.IsLetter(x));
+
+                            if (isIndex)
+                                goto case KeyValueType.Int;
+                            else
+                            {
+                                if (DisposeString == null)
+                                    throw new Exception("Dispose String argument is null on a PAC that was imported with one.");
+                                else
+                                {
+
+                                    int stringIndex = Array.IndexOf(DisposeString.Strings, kv.Value);
+
+                                    if (stringIndex == -1)
+                                        throw new Exception(kv.Value + " does not exist in dispose_string.bin.");
+
+                                    writer.Write(stringIndex);
+                                }
+                            }
+                            break;
+
+                    }
+                }
+
                 writer.Write(entityDat.UnreadData);
             }
 
@@ -337,5 +398,7 @@ public class PACY5Exporter : MonoBehaviour
 
 
         writer.Stream.WriteTo(Path);
+
+        print("Wrote PAC to " + Path);
     }
 }

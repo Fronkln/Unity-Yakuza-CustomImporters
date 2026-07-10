@@ -15,6 +15,9 @@ public class PacCustomImporterY5 : ScriptedImporter
     [Header("OOE = Yakuza 5, OE = Ishin and above")]
     public bool IsOOE;
 
+    [Header("Optional dispose_string, which replaces numbers with more readable strings")]
+    public DisposeString DisposeString;
+
     private AssetImportContext m_ctx;
     private DataReader m_reader = null;
     private DataStream m_readStream = null;
@@ -147,7 +150,7 @@ public class PacCustomImporterY5 : ScriptedImporter
 
             for (int k = 0; k < totalData2Count; k++)
             {
-                entityDats[k] = BasePACEntityDataY5.Read(m_reader, header.NodeID, entityDats[0], header.Type, k, sizePerData, totalData2Count);
+                entityDats[k] = BasePACEntityDataY5.Read(m_reader, header.NodeID, entityDats[0], header.Type, k, sizePerData, totalData2Count, DisposeString);
             }
 
             if(m_reader.Stream.Position < end)
@@ -309,7 +312,7 @@ public class PacCustomImporterY5 : ScriptedImporter
                     for (int k = 0; k < strings.Length; k++)
                     {
                         m_reader.Stream.Position = msgStart + stringPtrs[k];
-                        strings[k] = m_reader.ReadString();
+                        strings[k] = m_reader.ReadString(Encoding.UTF8);
                     }
 
                     entityMsgData.Strings = strings;
