@@ -83,6 +83,39 @@ public class BasePACEntityDataY5
                 }
 
                 return data;
+
+            case 5:
+                data = new BasePACEntityDataY5();
+                data.Position = reader.ReadPXDVector3();
+                data.Angle = reader.ReadInt16();
+                data.Data2Count = reader.ReadByte();
+                data.Flags = reader.ReadByte();
+
+                data.KeyValues.Add("model", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.Add("name", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.Add("battle_intro", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.Add("boss_node_id", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk1", reader.ReadInt16().ToString(), KeyValueType.Short);
+                data.KeyValues.Add("ctrltype", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.Add("unk2", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.Add("character_type", reader.ReadByte().ToString(), KeyValueType.Byte);
+                
+                data.KeyValues.Add("unk3", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk4", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk7", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.Add("unk8", reader.ReadInt16().ToString(), KeyValueType.Short);
+                
+                data.KeyValues.Add("fight_node_id1", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("fight_node_id2", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk9", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk10", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk11", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk12", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk13", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk14", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.Add("unk15", reader.ReadInt32().ToString(), KeyValueType.Int);
+
+                return data;
         }
 
         if (data == null)

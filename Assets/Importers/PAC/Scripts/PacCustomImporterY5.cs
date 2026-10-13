@@ -74,6 +74,7 @@ public class PacCustomImporterY5 : ScriptedImporter
             switch(entity.Type)
             {
                 case PACEntityTypeY5.Character:
+                case PACEntityTypeY5.Boss:
                     model = Instantiate(Resources.Load<GameObject>("pac_character"));
 
                     model.transform.parent = pacGameObject.transform;
@@ -155,14 +156,20 @@ public class PacCustomImporterY5 : ScriptedImporter
 
             if(m_reader.Stream.Position < end)
             {
+                Debug.LogError("UNDERREAD! UID: " + header.NodeID.ToString("x") + " BY " + (end - m_reader.Stream.Position) + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT! UNREAD DATA HAS BEEN APPENDED TO LAST DATA");
+
+                List<byte> origBytes = new List<byte>(entityDats[entityDats.Length - 1].UnreadData);
+                origBytes.AddRange(m_reader.ReadBytes((int)(end - m_reader.Stream.Position)));
+
+                entityDats[entityDats.Length - 1].UnreadData = origBytes.ToArray();
+
                 m_reader.Stream.Position = end;
-                Debug.LogError("UNDERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
             }
 
             if (m_reader.Stream.Position > end)
             {
+                Debug.LogError("OVERREAD! UID: " + header.NodeID.ToString("x") + " BY " + (m_reader.Stream.Position - end) + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
                 m_reader.Stream.Position = end;
-                Debug.LogError("OVERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
             }
 
             m_reader.Stream.Position = header.CCCDataPtr;
