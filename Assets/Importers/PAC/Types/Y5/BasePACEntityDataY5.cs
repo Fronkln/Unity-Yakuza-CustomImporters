@@ -25,22 +25,22 @@ public class BasePACEntityDataY5
 
     }
 
-    public static BasePACEntityDataY5 Read(DataReader reader, int entityUID, BasePACEntityDataY5 first, byte propertyType, int index, int size, int totalCount, DisposeString disposeString = null)
+    public static BasePACEntityDataY5 Read(DataReader reader, bool isOOE, int entityUID, BasePACEntityDataY5 first, byte propertyType, int index, int size, int totalCount, DisposeString disposeString = null)
     {
         BasePACEntityDataY5 data = null;
 
-        switch(propertyType)
+        switch (propertyType)
         {
             default:
                 data = new BasePACEntityDataY5();
                 break;
 
-                //character
+            //character
             case 0:
                 bool isFighter = false;
                 bool isFighterFlag = false;
 
-                if(index <= 0)
+                if (index <= 0)
                 {
                     reader.Stream.RunInPosition(delegate
                     {
@@ -61,7 +61,9 @@ public class BasePACEntityDataY5
                 data.KeyValues.Add("flags1", reader.ReadInt32().ToString(), KeyValueType.Int);
                 data.KeyValues.Add("height", reader.ReadByte().ToString(), KeyValueType.Byte);
 
-                isFighter = first != null && int.Parse(first.KeyValues["flags1"]) != 0 && index > 0;
+                isFighter = isFighterFlag;
+
+
 
                 if (isFighterFlag && totalCount == 1)
                     data.UnreadData = reader.ReadBytes(51);
@@ -83,7 +85,7 @@ public class BasePACEntityDataY5
                 return data;
         }
 
-        if(data == null)
+        if (data == null)
             data = new BasePACEntityDataY5();
 
         long dataStart = reader.Stream.Position;
@@ -102,7 +104,7 @@ public class BasePACEntityDataY5
             data.UnreadData = reader.ReadBytes((int)(dataEnd - postReadPos));
         else if (postReadPos > dataEnd)
             throw new System.Exception("Overread");
-        
+
 
         return data;
     }

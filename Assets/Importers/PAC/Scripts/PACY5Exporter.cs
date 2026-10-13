@@ -401,4 +401,9 @@ public class PACY5Exporter : MonoBehaviour
 
         print("Wrote PAC to " + Path);
     }
+
+    public void Reset()
+    {
+        Path = transform.name + ".bin";
+    }
 }

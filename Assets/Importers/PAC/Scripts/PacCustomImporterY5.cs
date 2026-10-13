@@ -150,17 +150,19 @@ public class PacCustomImporterY5 : ScriptedImporter
 
             for (int k = 0; k < totalData2Count; k++)
             {
-                entityDats[k] = BasePACEntityDataY5.Read(m_reader, header.NodeID, entityDats[0], header.Type, k, sizePerData, totalData2Count, DisposeString);
+                entityDats[k] = BasePACEntityDataY5.Read(m_reader, IsOOE, header.NodeID, entityDats[0], header.Type, k, sizePerData, totalData2Count, DisposeString);
             }
 
             if(m_reader.Stream.Position < end)
             {
-                throw new System.Exception("UNDERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
+                m_reader.Stream.Position = end;
+                Debug.LogError("UNDERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
             }
 
             if (m_reader.Stream.Position > end)
             {
-                throw new System.Exception("OVERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
+                m_reader.Stream.Position = end;
+                Debug.LogError("OVERREAD! UID: " + header.NodeID.ToString("x") + " INDEX: " + i + " PAC ENTITY TYPE: " + header.Type + " PLEASE LEARN HOW TO READ IT!");
             }
 
             m_reader.Stream.Position = header.CCCDataPtr;
