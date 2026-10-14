@@ -16,6 +16,9 @@ public class PACY5Exporter : MonoBehaviour
     [Header("If you used dispose_string to import, you'll need it for export too")]
     public DisposeString DisposeString;
 
+    public bool ExportDisposeString = false;
+    public string ExportDisposeStringPath;
+
     public void Export()
     {
         PACComponentY5[] entities = transform.GetComponentsInChildren<PACComponentY5>();
@@ -355,10 +358,24 @@ public class PACY5Exporter : MonoBehaviour
                                 else
                                 {
 
-                                    int stringIndex = Array.IndexOf(DisposeString.Strings, kv.Value);
+                                    int stringIndex = DisposeString.Strings.IndexOf(kv.Value);
 
                                     if (stringIndex == -1)
-                                        throw new Exception(kv.Value + " does not exist in dispose_string.bin.");
+                                    {
+                                        if(!ExportDisposeString)
+                                            throw new Exception(kv.Value + " does not exist in dispose_string.bin. If you want to export it, enable Export Dispose String.");
+                                        else
+                                        {
+                                            DisposeString.Strings.Add(kv.Value);
+                                            stringIndex = DisposeString.Strings.Count - 1;
+
+                                            Debug.Log(kv.Value + " did not exist in dispose_string.bin, was added. ID: " + stringIndex);
+
+#if UNITY_EDITOR
+                                            UnityEditor.EditorUtility.SetDirty(DisposeString);
+#endif
+                                        }
+                                    }
 
                                     writer.Write(stringIndex);
                                 }
@@ -397,13 +414,22 @@ public class PACY5Exporter : MonoBehaviour
         }
 
 
-        writer.Stream.WriteTo(Path);
+        File.WriteAllBytes(Path, writer.Stream.ToArray());
 
         print("Wrote PAC to " + Path);
+
+        if(ExportDisposeString && DisposeString != null)
+        {
+            DisposeString.Write(ExportDisposeStringPath, DisposeString.Strings);
+
+            print("Wrote dispose_string to " + ExportDisposeStringPath);
+        }
     }
 
     public void Reset()
     {
         Path = transform.name + ".bin";
+        ExportDisposeString = false;
+        ExportDisposeStringPath = "dispose_string.bin";
     }
 }

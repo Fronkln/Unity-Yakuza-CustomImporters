@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Linq;
@@ -7,7 +8,7 @@ using System;
 
 public class DisposeString : ScriptableObject
 {
-    public string[] Strings;
+    public List<string> Strings;
 
     public static DisposeString Read(string filePath)
     {
@@ -38,9 +39,38 @@ public class DisposeString : ScriptableObject
             strings[i] = reader.ReadString();
         }
 
-        dString.Strings = strings;
+        dString.Strings = strings.ToList();
 
         return dString;
+    }
+
+    public static void Write(string outputPath, IEnumerable<string> strings)
+    {
+        int stringsCount = strings.Count();
+
+        DataWriter writer = new DataWriter(new DataStream()) { Endianness = EndiannessMode.BigEndian, DefaultEncoding = Encoding.GetEncoding(932)};
+        writer.Write((ushort)stringsCount);
+        writer.Write((ushort)0);
+        writer.Write(8);
+
+        writer.WriteTimes(0, stringsCount * 4);
+
+        int[] pointers = new int[stringsCount];
+
+        for (int i = 0; i < stringsCount; i++)
+        {
+            pointers[i] = (int)writer.Stream.Position;
+            writer.Write(strings.ElementAt(i));
+        }
+
+        writer.Stream.Position = 8;
+
+        for(int i = 0; i < stringsCount; i++)
+            writer.Write(pointers[i]);
+
+        writer.Align(32);
+
+        File.WriteAllBytes(outputPath, writer.Stream.ToArray());
     }
 
     //Static function to use on keyvalues stuff on custom importers, a bit jank but oh well
@@ -49,7 +79,7 @@ public class DisposeString : ScriptableObject
         if (dispose == null)
             return index.ToString();
 
-        if (index < 0 || index >= dispose.Strings.Length)
+        if (index < 0 || index >= dispose.Strings.Count)
             return index.ToString();
 
         return dispose.Strings[index];
