@@ -66,12 +66,19 @@ public class PACY5Exporter : MonoBehaviour
 
             headerLocations[entity] = writer.Stream.Position;
 
-            int uid = int.Parse(entity.transform.name, System.Globalization.NumberStyles.HexNumber);
-            writer.Write(uid);
-            writer.Write(0);
-            writer.Write(0);
-            writer.Write((ushort)0);
-            writer.Write((ushort)0);
+            try
+            {
+                int uid = int.Parse(entity.transform.name, System.Globalization.NumberStyles.HexNumber);
+                writer.Write(uid);
+                writer.Write(0);
+                writer.Write(0);
+                writer.Write((ushort)0);
+                writer.Write((ushort)0);
+            }
+            catch
+            {
+                Debug.LogError("Malformed entity name on transform: " + entity.transform.name);
+            }
         }
 
         writer.Align(16);
