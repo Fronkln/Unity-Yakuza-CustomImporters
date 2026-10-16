@@ -48,6 +48,9 @@ public class PacCustomImporterY5 : ScriptedImporter
         m_ctx.AddObjectToAsset("PAC_ROOT", root);
         m_ctx.SetMainObject(root);
 
+
+        PACComponentY5[] pacComponents = new PACComponentY5[pacEntities.Length];
+
         for(int i = 0; i < pacEntities.Length; i++)
         {
             var entity = pacEntities[i];
@@ -59,8 +62,20 @@ public class PacCustomImporterY5 : ScriptedImporter
 
             m_ctx.AddObjectToAsset("ENT_" + i, pacGameObject);
 
+            PACComponentY5 pacComponent = null;
 
-            var pacComponent = pacGameObject.AddComponent<PACComponentY5>();
+            switch(entity.Type)
+            {
+                default:
+                    pacComponent = pacGameObject.AddComponent<PACComponentY5>();
+                    break;
+                case PACEntityTypeY5.Fight:
+                    pacComponent = pacGameObject.AddComponent<PACComponentFightY5>();
+                    break;
+            }
+
+            pacComponents[i] = pacComponent;
+
             pacComponent.BaseEntityData = entity.EntityData;
             pacComponent.MsgData = entity.MsgData;
 
@@ -81,6 +96,8 @@ public class PacCustomImporterY5 : ScriptedImporter
                     model.transform.localPosition = Vector3.zero;
                     break;
             }
+
+            pacComponent.PostDataRead();
 
 
             if (model != null)
@@ -110,6 +127,11 @@ public class PacCustomImporterY5 : ScriptedImporter
 
             }
 
+        }
+
+        foreach(var component in pacComponents)
+        {
+            component.PostPACRead(pacComponents);
         }
 
 

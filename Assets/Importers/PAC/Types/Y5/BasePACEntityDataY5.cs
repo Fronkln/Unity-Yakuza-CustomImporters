@@ -54,12 +54,12 @@ public class BasePACEntityDataY5
                 data.Data2Count = reader.ReadByte();
                 data.Flags = reader.ReadByte();
 
-                data.KeyValues.Add("behavior", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
-                data.KeyValues.Add("model", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
-                data.KeyValues.Add("animation", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
-                data.KeyValues.Add("stance", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
-                data.KeyValues.Add("flags1", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("height", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("behavior", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.AddKeyValue("model", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.AddKeyValue("animation", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.AddKeyValue("stance", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.AddKeyValue("flags1", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("height", reader.ReadByte().ToString(), KeyValueType.Byte);
 
                 isFighter = isFighterFlag;
 
@@ -91,29 +91,63 @@ public class BasePACEntityDataY5
                 data.Data2Count = reader.ReadByte();
                 data.Flags = reader.ReadByte();
 
-                data.KeyValues.Add("model", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
-                data.KeyValues.Add("name", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
-                data.KeyValues.Add("battle_intro", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
-                data.KeyValues.Add("boss_node_id", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk1", reader.ReadInt16().ToString(), KeyValueType.Short);
-                data.KeyValues.Add("ctrltype", reader.ReadByte().ToString(), KeyValueType.Byte);
-                data.KeyValues.Add("unk2", reader.ReadByte().ToString(), KeyValueType.Byte);
-                data.KeyValues.Add("character_type", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("model", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.AddKeyValue("name", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.AddKeyValue("battle_intro", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                data.KeyValues.AddKeyValue("boss_node_id", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk1", reader.ReadInt16().ToString(), KeyValueType.Short);
+                data.KeyValues.AddKeyValue("ctrltype", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk2", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("character_type", reader.ReadByte().ToString(), KeyValueType.Byte);
                 
-                data.KeyValues.Add("unk3", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk4", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk7", reader.ReadByte().ToString(), KeyValueType.Byte);
-                data.KeyValues.Add("unk8", reader.ReadInt16().ToString(), KeyValueType.Short);
+                data.KeyValues.AddKeyValue("unk3", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk4", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk7", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk8", reader.ReadInt16().ToString(), KeyValueType.Short);
                 
-                data.KeyValues.Add("fight_node_id1", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("fight_node_id2", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk9", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk10", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk11", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk12", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk13", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk14", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.Add("unk15", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("fight_node_id1", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("fight_node_id2", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk9", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk10", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk11", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk12", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk13", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk14", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk15", reader.ReadInt32().ToString(), KeyValueType.Int);
+
+                return data;
+            case 0x2A:
+                data = new BasePACEntityDataY5();
+                data.Position = reader.ReadPXDVector3();
+                data.Angle = reader.ReadInt16();
+                data.Data2Count = reader.ReadByte();
+                data.Flags = reader.ReadByte();
+
+                data.KeyValues.AddKeyValue("ai_param1", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param2", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param3", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param4", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param5", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param6", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param7", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param8", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param9", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("ai_param10", reader.ReadByte().ToString(), KeyValueType.Byte);
+
+                short enemyCount = reader.ReadInt16();
+                data.KeyValues.AddKeyValue("enemy_count", enemyCount.ToString(), KeyValueType.Short);
+
+                data.KeyValues.AddKeyValue("boss_ptr", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("pad1", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("pad2", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("pad3", reader.ReadInt32().ToString(), KeyValueType.Int);
+
+
+                for (int i = 0; i < enemyCount; i++)
+                    data.KeyValues.AddKeyValue("enemy" + i + "_uid", reader.ReadInt32().ToString(), KeyValueType.Int);
+
+                for (int i = 0; i < enemyCount; i++)
+                    data.KeyValues.AddKeyValue("enemy" + i + "_idx", reader.ReadInt16().ToString(), KeyValueType.Short);
 
                 return data;
         }

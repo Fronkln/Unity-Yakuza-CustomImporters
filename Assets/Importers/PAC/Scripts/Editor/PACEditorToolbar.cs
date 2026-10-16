@@ -214,7 +214,7 @@ public class PACComponentY5KVFinder : EditorWindow
                 if (!entDat.KeyValues.ContainsKey(keyName))
                     continue;
 
-                string valueString = entDat.KeyValues[keyName];
+                string valueString = entDat.KeyValues.GetValueForKey(keyName);
 
                 if (!valueString.Contains(searchValue, StringComparison.OrdinalIgnoreCase))
                     continue;

@@ -39,6 +39,8 @@ public class PACY5Exporter : MonoBehaviour
 
         foreach (PACComponentY5 entity in entities)
         {
+            entity.PreprocessExport(entities);
+
             if (entity.BaseEntityData.Length > 0)
             {
                 entity.BaseEntityData[0].Position = entity.transform.position;
@@ -326,69 +328,82 @@ public class PACY5Exporter : MonoBehaviour
                 writer.Write(entityDat.Flags);
 
 
-                foreach(var kv in entityDat.KeyValues)
+                if (entity.transform.name == "2A200091")
+                    System.Diagnostics.Debugger.Break();
+
+                foreach (var key in entityDat.KeyValues.Keys)
                 {
-                    switch(entityDat.KeyValues.GetTypeForKey(kv.Key))
+                    string value = entityDat.KeyValues.GetValueForKey(key);
+                    KeyValueType type = entityDat.KeyValues.GetTypeForKey(key);
+
+                    try
                     {
-                        default:
-                            throw new System.Exception("Don't know how to write keyvalue type");
+                        switch (type)
+                        {
+                            default:
+                                throw new System.Exception("Don't know how to write keyvalue type");
 
 
-                        case KeyValueType.Byte:
-                            writer.Write(System.Convert.ToByte(kv.Value));
-                            break;
-                        case KeyValueType.Short:
-                            writer.Write(System.Convert.ToInt16(kv.Value));
-                            break;
-                        case KeyValueType.Int:
-                            writer.Write(System.Convert.ToInt32(kv.Value));
-                            break;
-                        case KeyValueType.Float:
-                            writer.Write(float.Parse(kv.Value, System.Globalization.CultureInfo.InvariantCulture));
-                            break;
-                        case KeyValueType.DisposeString:
-
-                            if(string.IsNullOrEmpty(kv.Value))
-                            {
-                                writer.Write(0);
+                            case KeyValueType.Byte:
+                                writer.Write(System.Convert.ToByte(value));
                                 break;
-                            }
+                            case KeyValueType.Short:
+                                writer.Write(System.Convert.ToInt16(value));
+                                break;
+                            case KeyValueType.Int:
+                                writer.Write(System.Convert.ToInt32(value));
+                                break;
+                            case KeyValueType.Float:
+                                writer.Write(float.Parse(value, System.Globalization.CultureInfo.InvariantCulture));
+                                break;
+                            case KeyValueType.DisposeString:
 
-                            bool isIndex = !kv.Value.Any(x => char.IsLetter(x));
+                                if (string.IsNullOrEmpty(value))
+                                {
+                                    writer.Write(0);
+                                    break;
+                                }
 
-                            if (isIndex)
-                                goto case KeyValueType.Int;
-                            else
-                            {
-                                if (DisposeString == null)
-                                    throw new Exception("Dispose String argument is null on a PAC that was imported with one.");
+                                bool isIndex = !value.Any(x => char.IsLetter(x));
+
+                                if (isIndex)
+                                    goto case KeyValueType.Int;
                                 else
                                 {
-
-                                    int stringIndex = DisposeString.Strings.IndexOf(kv.Value);
-
-                                    if (stringIndex == -1)
+                                    if (DisposeString == null)
+                                        throw new Exception("Dispose String argument is null on a PAC that was imported with one.");
+                                    else
                                     {
-                                        if(!ExportDisposeString)
-                                            throw new Exception(kv.Value + " does not exist in dispose_string.bin. If you want to export it, enable Export Dispose String.");
-                                        else
-                                        {
-                                            DisposeString.Strings.Add(kv.Value);
-                                            stringIndex = DisposeString.Strings.Count - 1;
 
-                                            Debug.Log(kv.Value + " did not exist in dispose_string.bin, was added. ID: " + stringIndex);
+                                        int stringIndex = DisposeString.Strings.IndexOf(value);
+
+                                        if (stringIndex == -1)
+                                        {
+                                            if (!ExportDisposeString)
+                                                throw new Exception(value + " does not exist in dispose_string.bin. If you want to export it, enable Export Dispose String.");
+                                            else
+                                            {
+                                                DisposeString.Strings.Add(value);
+                                                stringIndex = DisposeString.Strings.Count - 1;
+
+                                                Debug.Log(value + " did not exist in dispose_string.bin, was added. ID: " + stringIndex);
 
 #if UNITY_EDITOR
-                                            UnityEditor.EditorUtility.SetDirty(DisposeString);
+                                                UnityEditor.EditorUtility.SetDirty(DisposeString);
 #endif
+                                            }
                                         }
+
+                                        writer.Write(stringIndex);
                                     }
-
-                                    writer.Write(stringIndex);
                                 }
-                            }
-                            break;
+                                break;
 
+                        }
+                    }
+                    catch
+                    {
+                        throw new Exception("Exception writing keyvalue for entity " + entity.transform.name + " key: " + key + " value: " + value + " type: " + type);
                     }
                 }
 
