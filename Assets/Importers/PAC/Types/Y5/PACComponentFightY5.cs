@@ -12,7 +12,7 @@ public class PACComponentFightY5 : PACComponentY5
         base.PostPACRead(entities);
 
         if (BaseEntityData.Length > 1)
-            throw new System.Exception("BaseEntityData more than 1 we dont know how to handle this");
+            throw new System.Exception("BaseEntityData more than 1 for fight we dont know how to handle this");
 
         var dat = BaseEntityData[0];
 

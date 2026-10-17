@@ -99,21 +99,30 @@ public class BasePACEntityDataY5
                 data.KeyValues.AddKeyValue("ctrltype", reader.ReadByte().ToString(), KeyValueType.Byte);
                 data.KeyValues.AddKeyValue("unk2", reader.ReadByte().ToString(), KeyValueType.Byte);
                 data.KeyValues.AddKeyValue("character_type", reader.ReadByte().ToString(), KeyValueType.Byte);
-                
-                data.KeyValues.AddKeyValue("unk3", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.AddKeyValue("unk4", reader.ReadInt32().ToString(), KeyValueType.Int);
+
+                data.KeyValues.AddKeyValue("unk3", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk4", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk5", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk6", reader.ReadByte().ToString(), KeyValueType.Byte);
                 data.KeyValues.AddKeyValue("unk7", reader.ReadByte().ToString(), KeyValueType.Byte);
-                data.KeyValues.AddKeyValue("unk8", reader.ReadInt16().ToString(), KeyValueType.Short);
-                
+                data.KeyValues.AddKeyValue("unk8", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk9", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk10", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk11", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk12", reader.ReadByte().ToString(), KeyValueType.Byte);
+                data.KeyValues.AddKeyValue("unk13", reader.ReadByte().ToString(), KeyValueType.Byte);
+
+                data.KeyValues.AddKeyValue("unk14", reader.ReadInt32().ToString(), KeyValueType.Int);
+
                 data.KeyValues.AddKeyValue("fight_node_id1", reader.ReadInt32().ToString(), KeyValueType.Int);
                 data.KeyValues.AddKeyValue("fight_node_id2", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.AddKeyValue("unk9", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.AddKeyValue("unk10", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.AddKeyValue("unk11", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.AddKeyValue("unk12", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.AddKeyValue("unk13", reader.ReadInt32().ToString(), KeyValueType.Int);
-                data.KeyValues.AddKeyValue("unk14", reader.ReadInt32().ToString(), KeyValueType.Int);
+
                 data.KeyValues.AddKeyValue("unk15", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk16", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk17", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk18", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk19", reader.ReadInt32().ToString(), KeyValueType.Int);
+                data.KeyValues.AddKeyValue("unk20", reader.ReadInt32().ToString(), KeyValueType.Int);
 
                 return data;
             case 0x2A:

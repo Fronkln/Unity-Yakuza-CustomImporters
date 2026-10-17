@@ -43,10 +43,10 @@ public class PACComponentY5Editor : Editor
                 element.FindPropertyRelative("KeyValues");
 
             SerializedProperty keysProp =
-                keyValuesProp.FindPropertyRelative("keys");
+                keyValuesProp.FindPropertyRelative("Keys");
 
             SerializedProperty valuesProp =
-                keyValuesProp.FindPropertyRelative("values");
+                keyValuesProp.FindPropertyRelative("Values");
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField($"Entity {i}", EditorStyles.boldLabel);
