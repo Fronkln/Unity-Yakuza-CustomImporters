@@ -54,6 +54,9 @@ public class PACComponentFightY5 : PACComponentY5
 
         dat.KeyValues.SetKeyValue("enemy_count", Fighters.Count.ToString(), KeyValueType.Short);
         dat.KeyValues.SetKeyValue("boss_ptr", 0x2C.ToString(), KeyValueType.Int);
+        dat.KeyValues.SetKeyValue("pad1", "0", KeyValueType.Int);
+        dat.KeyValues.SetKeyValue("pad2", "0", KeyValueType.Int);
+        dat.KeyValues.SetKeyValue("pad3", "0", KeyValueType.Int);
 
         int enemyIdx = 0;
 
@@ -64,9 +67,21 @@ public class PACComponentFightY5 : PACComponentY5
             if (fighter == null)
                 continue;
 
-
             int uid = int.Parse(fighter.transform.name, System.Globalization.NumberStyles.HexNumber);
             dat.KeyValues.SetKeyValue("enemy" + enemyIdx + "_uid", uid.ToString(), KeyValueType.Int);
+            enemyIdx++;
+        }
+
+
+        enemyIdx = 0;
+
+        for (int i = 0; i < Fighters.Count; i++)
+        {
+            var fighter = Fighters[i];
+
+            if (fighter == null)
+                continue;
+
             dat.KeyValues.SetKeyValue("enemy" + enemyIdx + "_idx", Array.IndexOf(entities, fighter).ToString(), KeyValueType.Short);
             enemyIdx++;
         }
