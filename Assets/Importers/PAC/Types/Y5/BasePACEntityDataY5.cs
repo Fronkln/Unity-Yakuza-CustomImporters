@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using UnityEngine;
 using Yarhl.IO;
 
@@ -43,6 +44,9 @@ public class BasePACEntityDataY5
                 bool isFighter = false;
                 bool isFighterFlag = false;
 
+                if (entityUID == 0x30327)
+                    Debugger.Break();
+
                 if (index <= 0)
                 {
                     reader.Stream.RunInPosition(delegate
@@ -82,6 +86,43 @@ public class BasePACEntityDataY5
                     data.KeyValues.AddKeyValue("unk10", reader.ReadInt32().ToString(), KeyValueType.Int);
                     data.KeyValues.AddKeyValue("item", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
                     data.KeyValues.AddKeyValue("unk11", reader.ReadInt32().ToString(), KeyValueType.Int);
+
+                    return data;
+                }
+
+                BasePACEntityDataY5 ReadFighterCharacterData()
+                {
+
+                    data = new BasePACEntityDataY5();
+                    data.Position = reader.ReadPXDVector3();
+                    data.Angle = reader.ReadInt16();
+                    data.Data2Count = reader.ReadByte();
+                    data.Flags = reader.ReadByte();
+
+                    data.KeyValues.AddKeyValue("behavior", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                    data.KeyValues.AddKeyValue("model", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                    data.KeyValues.AddKeyValue("animation", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                    data.KeyValues.AddKeyValue("stance", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+                    data.KeyValues.AddKeyValue("flags1", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk1", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("height", reader.ReadByte().ToString(), KeyValueType.Byte);
+
+                    data.KeyValues.AddKeyValue("unk2", reader.ReadByte().ToString(), KeyValueType.Byte);
+                    data.KeyValues.AddKeyValue("unk3", reader.ReadByte().ToString(), KeyValueType.Byte);
+                    data.KeyValues.AddKeyValue("unk4", reader.ReadByte().ToString(), KeyValueType.Byte);
+
+                    data.KeyValues.AddKeyValue("unk5", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk6", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk7", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk8", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk9", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk10", reader.ReadInt32().ToString(), KeyValueType.Int);
+
+                    data.KeyValues.AddKeyValue("item", DisposeString.Get(disposeString, reader.ReadInt32()), KeyValueType.DisposeString);
+
+                    data.KeyValues.AddKeyValue("unk15", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk16", reader.ReadInt32().ToString(), KeyValueType.Int);
+                    data.KeyValues.AddKeyValue("unk17", reader.ReadInt32().ToString(), KeyValueType.Int);
 
                     return data;
                 }
@@ -159,6 +200,7 @@ public class BasePACEntityDataY5
                 }
 
                 BasePACEntityDataY5[] entityDats = new BasePACEntityDataY5[totalCount];
+
                 entityDats[0] = ReadCharacterData();
 
                 if(!isFighter)
@@ -169,11 +211,15 @@ public class BasePACEntityDataY5
                 else
                 {
                     if (totalCount <= 1)
-                        return entityDats;
-
-                    if(calcSizedPerData <= 204)
                     {
-                        entityDats[0].UnreadData = reader.ReadBytes(8);
+                        entityDats[0].UnreadData = reader.ReadBytes((int)(end - reader.Stream.Position));
+                        return entityDats;
+                    }
+
+                    entityDats[0].UnreadData = reader.ReadBytes(8);
+
+                    if (size <= 204)
+                    {
 
                         for (int i = 1; i < totalCount; i++)
                         {
@@ -188,6 +234,26 @@ public class BasePACEntityDataY5
                     else
                     {
 
+                        for(int i = 1; i < totalCount - 1; i++)
+                            entityDats[i] = ReadFighterCharacterData();
+
+                        entityDats[totalCount - 1] = ReadFighterDataLessThan204Bytes();
+
+                        if (reader.Stream.Position < end)
+                            entityDats[totalCount - 1].UnreadData = reader.ReadBytes((int)(end - reader.Stream.Position));
+                        
+
+                        /*
+                        for (int i = 1; i < totalCount; i++)
+                        {
+                            entityDats[i] = ReadFighterDataGreaterThan204Bytes();
+
+                            bool lastDat = i == totalCount - 1;
+
+                            if (reader.Stream.Position < end)
+                                entityDats[i].UnreadData = reader.ReadBytes((int)(end - reader.Stream.Position));
+                        }*
+                        */
                     }
                 }
 
