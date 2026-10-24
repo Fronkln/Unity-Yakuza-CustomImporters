@@ -13,7 +13,7 @@ public class PACComponentY5 : MonoBehaviour
     {
     }
 
-    public virtual void PreprocessExport(PACComponentY5[] entities)
+    public virtual void PreprocessExport(PACComponentY5[] entities, bool isOOE)
     {
 
     }

@@ -256,8 +256,13 @@ public class PacCustomImporterY5 : ScriptedImporter
                                 {
                                     PACConditionChunkY5 cond = new PACConditionChunkY5();
                                     cond.Type = m_reader.ReadInt32();
-                                    cond.Unknown2 = m_reader.ReadInt32();
-                                    cond.Unknown3 = m_reader.ReadInt32();
+
+                                    long endPos = m_reader.Stream.Position + 8;
+
+                                    cond.ReadConditionParams(m_reader);
+
+                                    if (endPos > m_reader.Stream.Position)
+                                        cond.UnreadData = m_reader.ReadBytes((int)(endPos - m_reader.Stream.Position));
 
                                     group.Conditions.Add(cond);
                                 }

@@ -27,9 +27,9 @@ public class PACComponentFightY5 : PACComponentY5
         }
     }
 
-    public override void PreprocessExport(PACComponentY5[] entities)
+    public override void PreprocessExport(PACComponentY5[] entities, bool isOOE)
     {
-        base.PreprocessExport(entities);
+        base.PreprocessExport(entities, isOOE);
 
         var dat = BaseEntityData[0];
 
@@ -53,7 +53,7 @@ public class PACComponentFightY5 : PACComponentY5
         }
 
         dat.KeyValues.SetKeyValue("enemy_count", Fighters.Count.ToString(), KeyValueType.Short);
-        dat.KeyValues.SetKeyValue("boss_ptr", 0x2C.ToString(), KeyValueType.Int);
+        dat.KeyValues.SetKeyValue("boss_ptr", (isOOE ? 0x2C : 36).ToString(), KeyValueType.Int);
         dat.KeyValues.SetKeyValue("pad1", "0", KeyValueType.Int);
         dat.KeyValues.SetKeyValue("pad2", "0", KeyValueType.Int);
         dat.KeyValues.SetKeyValue("pad3", "0", KeyValueType.Int);

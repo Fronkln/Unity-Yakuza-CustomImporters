@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Yarhl.IO;
 
 public enum KeyValueType
 {
@@ -14,7 +15,7 @@ public enum KeyValueType
 }
 
 [Serializable]
-public class PACEntityKeyValueDictionary
+public class KeyValueDictionary
 {
     [SerializeField]
     public List<string> Keys = new List<string>();
@@ -76,5 +77,35 @@ public class PACEntityKeyValueDictionary
     public string GetValueForKey(object key)
     {
         return Values[Keys.IndexOf((string)key)];
+    }
+
+    public void WriteKeyValues(DataWriter writer)
+    {
+        foreach (var key in Keys)
+        {
+            string value = GetValueForKey(key);
+            KeyValueType type = GetTypeForKey(key);
+
+            switch (type)
+            {
+                default:
+                    throw new System.Exception("Don't know how to write keyvalue type");
+
+
+                case KeyValueType.Byte:
+                    writer.Write(System.Convert.ToByte(value));
+                    break;
+                case KeyValueType.Short:
+                    writer.Write(System.Convert.ToInt16(value));
+                    break;
+                case KeyValueType.Int:
+                    writer.Write(System.Convert.ToInt32(value));
+                    break;
+                case KeyValueType.Float:
+                    writer.Write(float.Parse(value, System.Globalization.CultureInfo.InvariantCulture));
+                    break;
+
+            }
+        }
     }
 }

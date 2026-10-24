@@ -8,6 +8,7 @@ public class PACY5ExporterEditor : Editor
     {
         serializedObject.Update();
 
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("IsOOE"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("Path"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("DisposeString"));
 

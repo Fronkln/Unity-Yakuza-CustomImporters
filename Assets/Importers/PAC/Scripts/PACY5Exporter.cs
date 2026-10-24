@@ -13,6 +13,8 @@ public class PACY5Exporter : MonoBehaviour
 {
     public string Path;
 
+    public bool IsOOE = false;
+
     [Header("If you used dispose_string to import, you'll need it for export too")]
     public DisposeString DisposeString;
 
@@ -39,7 +41,7 @@ public class PACY5Exporter : MonoBehaviour
 
         foreach (PACComponentY5 entity in entities)
         {
-            entity.PreprocessExport(entities);
+            entity.PreprocessExport(entities, IsOOE);
 
             if (entity.BaseEntityData.Length > 0)
             {
@@ -189,8 +191,8 @@ public class PACY5Exporter : MonoBehaviour
                     foreach (var condition in group.Conditions)
                     {
                         writer.Write(condition.Type);
-                        writer.Write(condition.Unknown2);
-                        writer.Write(condition.Unknown3);
+                        condition.ConditionParams.WriteKeyValues(writer);
+                        writer.Write(condition.UnreadData);
                     }
 
                     if (group.Conditions.Count <= 0)
@@ -412,6 +414,8 @@ public class PACY5Exporter : MonoBehaviour
 
             long entityDataEnd = writer.Stream.Position;
             int size = (int)(entityDataEnd - entityDataStart);
+
+            writer.Align(4);
 
             entityDataSizes[entity] = size;
             

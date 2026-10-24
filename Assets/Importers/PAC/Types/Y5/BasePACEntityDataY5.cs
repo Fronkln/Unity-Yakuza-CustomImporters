@@ -14,7 +14,7 @@ public class BasePACEntityDataY5
     public byte[] UnreadData = new byte[0];
 
     //Better-ish way to universally serialize data, inspired from S2U
-    public PACEntityKeyValueDictionary KeyValues = new PACEntityKeyValueDictionary();
+    public KeyValueDictionary KeyValues = new KeyValueDictionary();
 
     public virtual void ReadData(DataReader reader)
     {
@@ -28,7 +28,10 @@ public class BasePACEntityDataY5
 
     public static BasePACEntityDataY5[] Read(DataReader reader, bool isOOE, int entityUID, BasePACEntityDataY5 first, byte propertyType, int index, int size, int calcSizedPerData, int totalCount, DisposeString disposeString = null)
     {
-        long start = reader.Stream.Position;
+        if (entityUID == 0X200233)
+            Debugger.Break();
+
+            long start = reader.Stream.Position;
         long end = reader.Stream.Position + calcSizedPerData;
 
         BasePACEntityDataY5 data = null;
@@ -43,9 +46,6 @@ public class BasePACEntityDataY5
             case PACEntityTypeY5.Character:
                 bool isFighter = false;
                 bool isFighterFlag = false;
-
-                if (entityUID == 0x30327)
-                    Debugger.Break();
 
                 if (index <= 0)
                 {

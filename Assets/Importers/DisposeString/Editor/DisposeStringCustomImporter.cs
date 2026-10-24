@@ -12,7 +12,7 @@ using UnityEditor.Experimental.AssetImporters;
 
 
 [ScriptedImporter(1, "ds")]
-public class DisposeStringImporter : ScriptedImporter
+public class DisposeStringCustomImporter : ScriptedImporter
 {
     public override void OnImportAsset(AssetImportContext ctx)
     {
